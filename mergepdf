@@ -1,0 +1,21 @@
+#!/bin/sh
+
+[ $# -ge 2 ] || exec echo "usage: $0 [output] [input1]..."
+
+output=$1
+shift
+
+toc=/tmp/$$.ps
+
+page=1
+chapter=1
+for i in $@; do
+	echo "[/Page $page /View [/XYZ null null null] /Title ($chapter) /OUT pdfmark" >>$toc
+	pagecount=$(gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit")
+	page=$((page + pagecount))
+	chapter=$((chapter + 1))
+done
+
+gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$output $toc -f $@
+
+rm -f $toc

@@ -1,0 +1,38 @@
+#!/usr/bin/perl -w
+
+my $level = 0;
+
+sub scan {
+	printf('scanning '.('  'x$level)."$_[0]\n");
+	chdir($_[0]);
+
+	my @m3u = `tagreader *.mp3 2>/dev/null`;
+
+	$level++;
+	foreach my $dir (<*>) {
+		if(-d $dir) {
+			my $tag = FALSE;
+			foreach my $line (scan($dir)) {
+				if($tag) {
+					push(@m3u, $line);
+				} else {
+					push(@m3u, "$dir/$line");
+				}
+				$tag = !$tag;
+			}
+		}
+	}
+	$level--;
+
+	open(M3U, '>', 'playlist.m3u');
+	print(M3U "#EXTM3U\n");
+	print(M3U @m3u);
+	close(M3U);
+
+	chdir('..');
+	return @m3u;
+}
+
+$#ARGV >= 0 || die 'no arguments';
+
+scan($ARGV[0]);
