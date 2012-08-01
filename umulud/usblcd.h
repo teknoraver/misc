@@ -14,7 +14,7 @@ struct hid_params {
     unsigned int endpoint;
     unsigned int packetlen;
     unsigned int timeout;
-    void *packet;
+    char packet[_USBLCD_MAX_DATA_LEN];
 };
 
 struct usblcd_event {
@@ -199,19 +199,15 @@ void hid_interrupt_write(void *handle, struct hid_params *params)
 void usblcd_getversion(struct usblcd_operations *self)
 {
 
-    struct hid_params *params;
+    struct hid_params params;
     
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
-    params->endpoint = USB_ENDPOINT_OUT + 1;
-    params->packetlen = 1;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
+    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.packetlen = 1;
+    params.timeout = HID_TIMEOUT;
     
-    snprintf (params->packet, params->packetlen + 1 , "%c", HID_REPORT_GET_VERSION);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    snprintf (params.packet, params.packetlen + 1 , "%c", HID_REPORT_GET_VERSION);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 
@@ -229,17 +225,13 @@ void usblcd_init(struct usblcd_operations *self)
 
 void usblcd_control(struct usblcd_operations *self)
 {
-    struct hid_params *params;
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
-    params->endpoint = USB_ENDPOINT_OUT + 1;
-    params->packetlen = 2;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
-    snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, self->state.usblcd_switch | self->state.usblcd_cursor | self->state.usblcd_cursor_blink);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    struct hid_params params;
+    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.packetlen = 2;
+    params.timeout = HID_TIMEOUT;
+    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, self->state.usblcd_switch | self->state.usblcd_cursor | self->state.usblcd_cursor_blink);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 void usblcd_set_cursor(struct usblcd_operations *self, unsigned int status)
@@ -259,7 +251,7 @@ void usblcd_set_cursor_blink(struct usblcd_operations *self, unsigned int status
 
 void usblcd_setled(struct usblcd_operations *self, unsigned int led, unsigned int status) 
 {
-    struct hid_params *params;
+    struct hid_params params;
     
     if (led > _USBLCD_MAX_LEDS) led = _USBLCD_MAX_LEDS;
     if (status > 1 || status < 0) status = 0;
@@ -268,70 +260,54 @@ void usblcd_setled(struct usblcd_operations *self, unsigned int led, unsigned in
     if (status)	self->leds |= 1 << led;
     else self->leds &= ~ (1 << led);
     
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
-    params->endpoint = USB_ENDPOINT_OUT + 1;
-    params->packetlen = 2;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
+    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.packetlen = 2;
+    params.timeout = HID_TIMEOUT;
     
-    snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LED_STATE, self->leds);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LED_STATE, self->leds);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 void usblcd_backlight(struct usblcd_operations *self, unsigned int status) 
 {
-    struct hid_params *params;
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
-    params->endpoint = USB_ENDPOINT_OUT + 1;
-    params->packetlen = 2;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
-    snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LCD_BACKLIGHT, status);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    struct hid_params params;
+    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.packetlen = 2;
+    params.timeout = HID_TIMEOUT;
+    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_BACKLIGHT, status);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 void usblcd_clear(struct usblcd_operations *self)
 {
-    struct hid_params *params;
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
-    params->endpoint = USB_ENDPOINT_OUT + 1;
-    params->packetlen = 1;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
-    snprintf (params->packet, params->packetlen + 1 , "%c", OUT_REPORT_LCD_CLEAR);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    struct hid_params params;
+    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.packetlen = 1;
+    params.timeout = HID_TIMEOUT;
+    snprintf (params.packet, params.packetlen + 1 , "%c", OUT_REPORT_LCD_CLEAR);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 void usblcd_settext(struct usblcd_operations *self, unsigned int row, unsigned int column, char *text)
 {
-    struct hid_params *params;
+    struct hid_params params;
     unsigned int len;
     
-    params =(struct hid_params *) malloc (sizeof(struct hid_params));
     len = strlen(text);
     
     if (len > 20) len = 20;
     if (row > _USBLCD_MAX_ROWS) row = _USBLCD_MAX_ROWS;
     if (column > _USBLCD_MAX_COLS) column = _USBLCD_MAX_COLS;
     
-    params->endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = USB_ENDPOINT_OUT + 1;
     /* 3 control bytes row, column, text length*/
-    params->packetlen = len + 1 + 3;
-    params->timeout = HID_TIMEOUT;
-    params->packet =(char *) malloc (params->packetlen + 1 );
-    snprintf (params->packet, params->packetlen + 1 , "%c%c%c%c%s", OUT_REPORT_LCD_TEXT,  row, column, len, text);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, params);
-    free(params->packet);
-    free(params);
+    params.packetlen = len + 1 + 3;
+    params.timeout = HID_TIMEOUT;
+    snprintf (params.packet, params.packetlen + 1 , "%c%c%c%c%s", OUT_REPORT_LCD_TEXT,  row, column, len, text);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, &params);
 }
 
 hid_return hid_close(void *handle)
