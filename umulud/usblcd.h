@@ -8,8 +8,6 @@
 #include "driver.h"
 #include "debug.h"
 
-typedef int hid_return;
-
 struct hid_params {
     unsigned int endpoint;
     unsigned int packetlen;
@@ -135,9 +133,9 @@ static char * hid_get_serial(struct usb_device *dev, struct usb_dev_handle *devh
 }
 #endif
 
-hid_return hid_init(struct hid_device *hiddev)
+int hid_init(struct hid_device *hiddev)
 {
-    hid_return ret;
+    int ret;
     char buf[65535];
     
     usb_init();
@@ -187,7 +185,7 @@ hid_return hid_init(struct hid_device *hiddev)
 
 void hid_interrupt_write(void *handle, struct hid_params *params)
 {
-    hid_return ret;
+    int ret;
     
     MESSAGE("Device: %x", handle);
     ret = usb_interrupt_write((usb_dev_handle *) handle, (unsigned int const) params->endpoint , \
@@ -312,9 +310,9 @@ void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-hid_return hid_close(void *handle)
+int hid_close(void *handle)
 {
-    hid_return ret;
+    int ret;
     ret = usb_close(handle);
     
     if (ret < 0) {
