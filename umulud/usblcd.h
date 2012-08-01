@@ -21,7 +21,7 @@ struct usblcd_event {
     /* 0 keypad data, 1 infrared data */
     unsigned int type;
     int length;
-    unsigned char *data;
+    unsigned char data[_USBLCD_MAX_DATA_LEN];
 };
 
 struct usblcd_state {
@@ -36,18 +36,13 @@ struct hid_device {
     struct usb_dev_handle *handle;
 };
 
-struct hid_operations {
-    struct hid_device hiddev;
-};
-
 struct usblcd_operations {
-
 /* lcd and cursor status */
     struct usblcd_state state;
 /* leds state */
     unsigned int leds;
 /* pointer to deeper level hid functions */
-    struct hid_operations hid;
+    struct hid_device hiddev;
 };
 
 static struct usb_device *hid_find_device(int vendor, int product) 
@@ -213,8 +208,8 @@ void usblcd_getversion(struct usblcd_operations *self)
     params->packet =(char *) malloc (params->packetlen + 1 );
     
     snprintf (params->packet, params->packetlen + 1 , "%c", HID_REPORT_GET_VERSION);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hid.hiddev.handle);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -228,7 +223,7 @@ void usblcd_init(struct usblcd_operations *self)
 	
 	self->leds = 0;
 
-	hid_init(&self->hid.hiddev);
+	hid_init(&self->hiddev);
 	usblcd_getversion(self);
 }
 
@@ -241,8 +236,8 @@ void usblcd_control(struct usblcd_operations *self)
     params->timeout = HID_TIMEOUT;
     params->packet =(char *) malloc (params->packetlen + 1 );
     snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, self->state.usblcd_switch | self->state.usblcd_cursor | self->state.usblcd_cursor_blink);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hid.hiddev.handle);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -280,7 +275,7 @@ void usblcd_setled(struct usblcd_operations *self, unsigned int led, unsigned in
     params->packet =(char *) malloc (params->packetlen + 1 );
     
     snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LED_STATE, self->leds);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -294,8 +289,8 @@ void usblcd_backlight(struct usblcd_operations *self, unsigned int status)
     params->timeout = HID_TIMEOUT;
     params->packet =(char *) malloc (params->packetlen + 1 );
     snprintf (params->packet, params->packetlen + 1 , "%c%c", OUT_REPORT_LCD_BACKLIGHT, status);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hid.hiddev.handle);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -309,8 +304,8 @@ void usblcd_clear(struct usblcd_operations *self)
     params->timeout = HID_TIMEOUT;
     params->packet =(char *) malloc (params->packetlen + 1 );
     snprintf (params->packet, params->packetlen + 1 , "%c", OUT_REPORT_LCD_CLEAR);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hid.hiddev.handle);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -333,8 +328,8 @@ void usblcd_settext(struct usblcd_operations *self, unsigned int row, unsigned i
     params->timeout = HID_TIMEOUT;
     params->packet =(char *) malloc (params->packetlen + 1 );
     snprintf (params->packet, params->packetlen + 1 , "%c%c%c%c%s", OUT_REPORT_LCD_TEXT,  row, column, len, text);
-    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hid.hiddev.handle);
-    hid_interrupt_write(self->hid.hiddev.handle, params);
+    MESSAGE("Wrinting %s to lcd device %x", params->packet, self->hiddev.handle);
+    hid_interrupt_write(self->hiddev.handle, params);
     free(params->packet);
     free(params);
 }
@@ -353,8 +348,8 @@ hid_return hid_close(void *handle)
 
 void usblcd_close(struct usblcd_operations *self)
 {
-    if (self->hid.hiddev.handle) 
-	hid_close(self->hid.hiddev.handle);
+    if (self->hiddev.handle) 
+	hid_close(self->hiddev.handle);
 }
 
 struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
@@ -363,13 +358,11 @@ struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
     char read_packet[_USBLCD_MAX_DATA_LEN];
     struct usblcd_event *event;
 
-    //hid_set_idle(self->hid.hiddev.handle, 0, 0);
+    //hid_set_idle(self->hiddev.handle, 0, 0);
     
     if ((event = (struct usblcd_event *) malloc(sizeof(struct usblcd_event))) == NULL) return NULL;
-    if ((event->data = (unsigned char *) malloc(sizeof(unsigned char) * _USBLCD_MAX_DATA_LEN)) == NULL) 
-		    return NULL;
      
-    ret = usb_interrupt_read(self->hid.hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
+    ret = usb_interrupt_read(self->hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
     
     if (ret > 0) {
         switch ((unsigned char)read_packet[0]) {

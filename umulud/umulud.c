@@ -387,7 +387,6 @@ int main (int argc, char **argv)
 
 		usleep(333 * 1000);
 
-		free(event->data);
 		free(event);
 	}
 
