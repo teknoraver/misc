@@ -345,10 +345,8 @@ int main (int argc, char **argv)
 	pthread_create(&servert, NULL, server, NULL);
 
 	while (1) {
-		if (!usblcd_read_events(&mylcd, &event)) {
-			usleep(333 * 1000);
+		if (!usblcd_read_events(&mylcd, &event))
 			continue;
-		}
 
 		if (event.type == 0 && event.data[0]) {
 			int key = event.data[0];
@@ -357,12 +355,9 @@ int main (int argc, char **argv)
 		}
 
 #ifdef RC5
-		if (event.type == 1) {
+		if (event.type == 1)
 		    rc5_decode(rc5, event.data, event.length);
-		}
 #endif
-
-		usleep(333 * 1000);
 	}
 
 	pthread_cancel(textt);
