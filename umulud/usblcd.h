@@ -330,16 +330,13 @@ void usblcd_close(struct usblcd_operations *self)
 	hid_close(self->hiddev.handle);
 }
 
-struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
+int usblcd_read_events(struct usblcd_operations *self, struct usblcd_event *event)
 {
     int ret = -1;
     char read_packet[_USBLCD_MAX_DATA_LEN];
-    struct usblcd_event *event;
 
     //hid_set_idle(self->hiddev.handle, 0, 0);
-    
-    if ((event = (struct usblcd_event *) malloc(sizeof(struct usblcd_event))) == NULL) return NULL;
-     
+         
     ret = usb_interrupt_read(self->hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
     
     if (ret > 0) {
@@ -353,7 +350,7 @@ struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
 #ifdef DEBUG
 		print_buffer(event->data, event->length);
 #endif	
-		return event;
+		return 1;
 		
 	    } break;
 
@@ -368,7 +365,7 @@ struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
 #ifdef DEBUG
 		print_buffer(event->data, event->length);
 #endif	
-		return event;
+		return 1;
 
 	    } break;
 	
@@ -385,7 +382,7 @@ struct usblcd_event * usblcd_read_events(struct usblcd_operations *self)
 	}
     }
     
-    return NULL;
+    return 0;
 }
 
 #endif
