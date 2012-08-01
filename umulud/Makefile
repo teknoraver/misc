@@ -1,8 +1,13 @@
 CFLAGS := -Wall -Wno-format -O2
 LDFLAGS := -pthread -lusb -lreadline
 
-all: umulud
-	strip -s umulud
+BIN := umulud
+
+all: $(BIN)
+	strip -s $(BIN)
 
 clean:
-	rm -f umulud
+	rm -f $(BIN)
+
+test: all
+	./$(BIN)

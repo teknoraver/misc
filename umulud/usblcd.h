@@ -404,46 +404,6 @@ usblcd_event * usblcd_read_events(usblcd_operations *self)
 
 	    } break;
 	
-	    case RESULT_PARAMETER_MISSING:
-	    {
-	    } break;
-	
-	    case RESULT_DATA_MISSING:
-	    {
-	    } break;
-
-	    case RESULT_BLOCK_READ_ONLY:
-	    {
-	    } break;
-	
-	    case RESULT_BLOCK_TOO_BIG:
-	    {
-	    } break;
-		
-	    case RESULT_SECTION_OVERFLOW:
-	    {
-	    } break;
-	
-	    case HID_REPORT_GET_VERSION:
-	    {
-	    } break;
-		
-	    case HID_REPORT_ERASE_MEMORY:
-	    {
-	    } break;
-		
-	    case HID_REPORT_READ_MEMORY:
-	    {
-	    } break;
-		
-	    case HID_REPORT_WRITE_MEMORY:
-	    {
-	    } break;
-		
-	    case IN_REPORT_EXT_EE_DATA:
-	    {
-	    } break;
-		
 	    case IN_REPORT_INT_EE_DATA:
 	    {	
 #ifdef DEBUG
@@ -451,34 +411,9 @@ usblcd_event * usblcd_read_events(usblcd_operations *self)
 		print_buffer(read_packet, _USBLCD_MAX_DATA_LEN);
 #endif
 	    } break;
-		
-	    case OUT_REPORT_EXT_EE_READ:
-	    {
-	    } break;
-		
-	    case OUT_REPORT_EXT_EE_WRITE:
-	    {
-	    } break;
-	
-	    case OUT_REPORT_INT_EE_READ:
-	    {
-	    } break;
-		
-	    case OUT_REPORT_INT_EE_WRITE:
-	    {
-	    } break;
-		
-	    case HID_REPORT_EXIT_FLASHER:
-	    {
-	    } break;
-		
-	    case HID_REPORT_EXIT_KEYBOARD:
-	    {
-	    } break;
-	
+
 	    default:
-	    {
-	    }
+		break;
 	}
     }
     

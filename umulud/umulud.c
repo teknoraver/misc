@@ -26,7 +26,7 @@
 //#define DEBUG
 #undef DEBUG
 
-unsigned int debug_level = HID_DEBUG_ERRORS | HID_DEBUG_WARNINGS | HID_DEBUG_NOTICES;
+unsigned int debug_level = 0;
 
 #define SOCK_PATH "/tmp/umulud"
 
