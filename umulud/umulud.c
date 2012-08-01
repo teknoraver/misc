@@ -57,7 +57,7 @@ static time_t last;
 
 
 /* for connecting and communication with the device */
-usblcd_operations mylcd;
+struct usblcd_operations mylcd;
 
 static void do_key(int);
 static void* blink(void *);
@@ -320,15 +320,15 @@ static void do_key(int key)
 int main (int argc, char **argv)
 {
 	/* for keypad and infrared events */
-	usblcd_event *event;
+	struct usblcd_event *event;
 	last = time(NULL);
 
 #ifdef RC5
 	rc5decoder *rc5;
 #endif
 
-	/* init hid device and usblcd_operations structure */
-	//mylcd = new_usblcd_operations();
+	/* init hid device and struct usblcd_operations structure */
+	//mylcd = new_struct usblcd_operations();
 	memset(&mylcd, 0, sizeof(mylcd));
 	
 	/* set hid debug level */
