@@ -54,7 +54,7 @@ static time_t last;
 
 
 /* for connecting and communication with the device */
-struct usblcd_operations mylcd;
+struct usblcd mylcd;
 
 static void do_key(int);
 static void* blink(void *);
@@ -315,8 +315,8 @@ int main (int argc, char **argv)
 	rc5decoder *rc5;
 #endif
 
-	/* init hid device and struct usblcd_operations structure */
-	//mylcd = new_struct usblcd_operations();
+	/* init hid device and struct usblcd structure */
+	//mylcd = new_struct usblcd();
 	memset(&mylcd, 0, sizeof(mylcd));
 
 	/* init the USB LCD */

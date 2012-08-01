@@ -36,7 +36,7 @@ struct hid_device {
     struct usb_dev_handle *handle;
 };
 
-struct usblcd_operations {
+struct usblcd {
 /* lcd and cursor status */
     struct usblcd_state state;
 /* leds state */
@@ -198,7 +198,7 @@ void hid_interrupt_write(void *handle, struct hid_params *params)
 	fprintf(stderr, "hid_interrupt_write failed with return code %d\n", ret);
 }
 
-void usblcd_getversion(struct usblcd_operations *self)
+void usblcd_getversion(struct usblcd *usblcd)
 {
 
     struct hid_params params;
@@ -208,50 +208,50 @@ void usblcd_getversion(struct usblcd_operations *self)
     params.timeout = HID_TIMEOUT;
     
     snprintf (params.packet, params.packetlen + 1 , "%c", HID_REPORT_GET_VERSION);
-    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, usblcd->hiddev.handle);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
 
-void usblcd_init(struct usblcd_operations *self) 
+void usblcd_init(struct usblcd *usblcd) 
 {
-	self->state.usblcd_switch = _USBLCD_SWITCH_ON;
-	self->state.usblcd_cursor = 0;
-	self->state.usblcd_cursor_blink = 0;
+	usblcd->state.usblcd_switch = _USBLCD_SWITCH_ON;
+	usblcd->state.usblcd_cursor = 0;
+	usblcd->state.usblcd_cursor_blink = 0;
 	
-	self->leds = 0;
+	usblcd->leds = 0;
 
-	hid_init(&self->hiddev);
-	usblcd_getversion(self);
+	hid_init(&usblcd->hiddev);
+	usblcd_getversion(usblcd);
 }
 
-void usblcd_control(struct usblcd_operations *self)
+void usblcd_control(struct usblcd *usblcd)
 {
     struct hid_params params;
     params.endpoint = USB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
-    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, self->state.usblcd_switch | self->state.usblcd_cursor | self->state.usblcd_cursor_blink);
-    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, usblcd->state.usblcd_switch | usblcd->state.usblcd_cursor | usblcd->state.usblcd_cursor_blink);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, usblcd->hiddev.handle);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_set_cursor(struct usblcd_operations *self, unsigned int status)
+void usblcd_set_cursor(struct usblcd *usblcd, unsigned int status)
 {
-    if (status) self->state.usblcd_cursor = _USBLCD_CURSOR_ON;
-    else self->state.usblcd_cursor = 0;
-    usblcd_control(self);    
+    if (status) usblcd->state.usblcd_cursor = _USBLCD_CURSOR_ON;
+    else usblcd->state.usblcd_cursor = 0;
+    usblcd_control(usblcd);    
 }
 
-void usblcd_set_cursor_blink(struct usblcd_operations *self, unsigned int status)
+void usblcd_set_cursor_blink(struct usblcd *usblcd, unsigned int status)
 {
-    if (status) self->state.usblcd_cursor_blink = _USBLCD_CURSOR_BLINK_ON;
-    else self->state.usblcd_cursor_blink = 0;
+    if (status) usblcd->state.usblcd_cursor_blink = _USBLCD_CURSOR_BLINK_ON;
+    else usblcd->state.usblcd_cursor_blink = 0;
     
-    usblcd_control(self);    
+    usblcd_control(usblcd);    
 }
 
-void usblcd_setled(struct usblcd_operations *self, unsigned int led, unsigned int status) 
+void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status) 
 {
     struct hid_params params;
     
@@ -259,40 +259,40 @@ void usblcd_setled(struct usblcd_operations *self, unsigned int led, unsigned in
     if (status > 1 || status < 0) status = 0;
     
     /* set led bit to 1 or 0 */
-    if (status)	self->leds |= 1 << led;
-    else self->leds &= ~ (1 << led);
+    if (status)	usblcd->leds |= 1 << led;
+    else usblcd->leds &= ~ (1 << led);
     
     params.endpoint = USB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
     
-    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LED_STATE, self->leds);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LED_STATE, usblcd->leds);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_backlight(struct usblcd_operations *self, unsigned int status) 
+void usblcd_backlight(struct usblcd *usblcd, unsigned int status) 
 {
     struct hid_params params;
     params.endpoint = USB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_BACKLIGHT, status);
-    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, usblcd->hiddev.handle);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_clear(struct usblcd_operations *self)
+void usblcd_clear(struct usblcd *usblcd)
 {
     struct hid_params params;
     params.endpoint = USB_ENDPOINT_OUT + 1;
     params.packetlen = 1;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c", OUT_REPORT_LCD_CLEAR);
-    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, usblcd->hiddev.handle);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_settext(struct usblcd_operations *self, unsigned int row, unsigned int column, char *text)
+void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column, char *text)
 {
     struct hid_params params;
     unsigned int len;
@@ -308,8 +308,8 @@ void usblcd_settext(struct usblcd_operations *self, unsigned int row, unsigned i
     params.packetlen = len + 1 + 3;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c%c%c%c%s", OUT_REPORT_LCD_TEXT,  row, column, len, text);
-    MESSAGE("Wrinting %s to lcd device %x", params.packet, self->hiddev.handle);
-    hid_interrupt_write(self->hiddev.handle, &params);
+    MESSAGE("Wrinting %s to lcd device %x", params.packet, usblcd->hiddev.handle);
+    hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
 hid_return hid_close(void *handle)
@@ -324,20 +324,20 @@ hid_return hid_close(void *handle)
     return ret;
 }
 
-void usblcd_close(struct usblcd_operations *self)
+void usblcd_close(struct usblcd *usblcd)
 {
-    if (self->hiddev.handle) 
-	hid_close(self->hiddev.handle);
+    if (usblcd->hiddev.handle) 
+	hid_close(usblcd->hiddev.handle);
 }
 
-int usblcd_read_events(struct usblcd_operations *self, struct usblcd_event *event)
+int usblcd_read_events(struct usblcd *usblcd, struct usblcd_event *event)
 {
     int ret = -1;
     char read_packet[_USBLCD_MAX_DATA_LEN];
 
-    //hid_set_idle(self->hiddev.handle, 0, 0);
+    //hid_set_idle(usblcd->hiddev.handle, 0, 0);
          
-    ret = usb_interrupt_read(self->hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
+    ret = usb_interrupt_read(usblcd->hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
     
     if (ret > 0) {
         switch ((unsigned char)read_packet[0]) {
