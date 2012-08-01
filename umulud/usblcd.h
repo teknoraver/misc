@@ -61,6 +61,7 @@ static struct usb_device *hid_find_device(int vendor, int product)
     return NULL;
 }
 
+#ifdef DEBUG
 static char * hid_get_product(struct usb_device *dev, struct usb_dev_handle *devh)
 {
     int len;
@@ -132,6 +133,7 @@ static char * hid_get_serial(struct usb_device *dev, struct usb_dev_handle *devh
     }
     return NULL;
 }
+#endif
 
 hid_return hid_init(struct hid_device *hiddev)
 {

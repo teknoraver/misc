@@ -3,10 +3,14 @@
 
 extern unsigned int debug_level;
 
+#ifdef DEBUG
 #define DEBUGPRINTF(t, s, a...) if (stderr && debug_level > 1){ \
                                   fprintf(stderr, "%s: %s(): ", t, __FUNCTION__); \
                                   fprintf(stderr, s "\n", ##a); \
                                 }
+#else
+#define DEBUGPRINTF(t, s, a...)
+#endif
 
 #define BIT(x)			(1 << x)
 #define HID_DEBUG_TRACES	BIT(0)

@@ -20,11 +20,8 @@
 #include <usb.h>
 
 #include "usblcd.h"
-// #include "rc5.h"
-// #include "widgets.h"
 
 //#define DEBUG
-#undef DEBUG
 
 unsigned int debug_level = 0;
 
