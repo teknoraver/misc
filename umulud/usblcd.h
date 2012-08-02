@@ -1,7 +1,7 @@
 #ifndef USBLCD_H
 #define USBLCD_H
 
-#include <usb.h>
+#include <libusb-1.0/libusb.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -30,8 +30,8 @@ struct usblcd_state {
 
 struct hid_device {
     unsigned int id;
-    struct usb_device *device;
-    struct usb_dev_handle *handle;
+    libusb_device *device;
+    libusb_device_handle *handle;
 };
 
 struct usblcd {
@@ -43,7 +43,7 @@ struct usblcd {
     struct hid_device hiddev;
 };
 
-static struct usb_device *hid_find_device(int vendor, int product) 
+/*static struct usb_device *hid_find_device(int vendor, int product) 
 {
     struct usb_bus *bus;
     
@@ -57,7 +57,7 @@ static struct usb_device *hid_find_device(int vendor, int product)
 	}
     }
     return NULL;
-}
+}*/
 
 #ifdef DEBUG
 static char * hid_get_product(struct usb_device *dev, struct usb_dev_handle *devh)
@@ -138,24 +138,24 @@ int hid_init(struct hid_device *hiddev)
     int ret;
     char buf[65535];
     
-    usb_init();
+    libusb_init(NULL);
     
-    usb_find_busses();
+    //usb_find_busses();
     
-    usb_find_devices();
+//    usb_find_devices();
     
-    hiddev->device = hid_find_device(_USBLCD_IDVENDOR, _USBLCD_IDPRODUCT);
+    hiddev->device = libusb_open_device_with_vid_pid(NULL, _USBLCD_IDVENDOR, _USBLCD_IDPRODUCT);
     
     if (hiddev->device == NULL) {
 	printf("Device not detected !\n");
 	exit (1);
     }
     
-    hiddev->handle = usb_open(hiddev->device);
+    libusb_open(hiddev->device, &hiddev->handle);
 
 //	FIXME
 //    signal(SIGTERM, release_usb_device);
-
+/*
     ret = usb_get_driver_np(hiddev->handle, 0, buf, sizeof(buf));
 
     if (ret == 0) {
@@ -169,7 +169,7 @@ int hid_init(struct hid_device *hiddev)
 		exit(1);
     }
     
-    ret = usb_set_altinterface(hiddev->handle, 0);
+    ret = usb_set_altinterface(hiddev->handle, 0);*/
     
     MESSAGE("Product: %s, Manufacturer: %s, Firmware Version: %s\n", hid_get_product(hiddev->device, hiddev->handle),
 	    hid_get_manufacturer(hiddev->device, hiddev->handle), hid_get_serial(hiddev->device, hiddev->handle));
@@ -186,11 +186,12 @@ int hid_init(struct hid_device *hiddev)
 void hid_interrupt_write(void *handle, struct hid_params *params)
 {
     int ret;
+    int trans = 0;
     
     MESSAGE("Device: %x", handle);
-    ret = usb_interrupt_write((usb_dev_handle *) handle, (unsigned int const) params->endpoint , \
-				 (char*) params->packet, (unsigned int const) params->packetlen, \
-				 (unsigned int const) params->timeout);
+    ret = libusb_interrupt_transfer(handle, (unsigned int const) params->endpoint, \
+				 (unsigned char*) params->packet, (unsigned int const) params->packetlen, \
+				 &trans, (unsigned int const) params->timeout);
     
     if (ret < 0) 
 	fprintf(stderr, "hid_interrupt_write failed with return code %d\n", ret);
@@ -201,7 +202,7 @@ void usblcd_getversion(struct usblcd *usblcd)
 
     struct hid_params params;
     
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     params.packetlen = 1;
     params.timeout = HID_TIMEOUT;
     
@@ -226,7 +227,7 @@ void usblcd_init(struct usblcd *usblcd)
 void usblcd_control(struct usblcd *usblcd)
 {
     struct hid_params params;
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_CONTROL, usblcd->state.usblcd_switch | usblcd->state.usblcd_cursor | usblcd->state.usblcd_cursor_blink);
@@ -260,7 +261,7 @@ void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status)
     if (status)	usblcd->leds |= 1 << led;
     else usblcd->leds &= ~ (1 << led);
     
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
     
@@ -271,7 +272,7 @@ void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status)
 void usblcd_backlight(struct usblcd *usblcd, unsigned int status) 
 {
     struct hid_params params;
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     params.packetlen = 2;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c%c", OUT_REPORT_LCD_BACKLIGHT, status);
@@ -282,7 +283,7 @@ void usblcd_backlight(struct usblcd *usblcd, unsigned int status)
 void usblcd_clear(struct usblcd *usblcd)
 {
     struct hid_params params;
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     params.packetlen = 1;
     params.timeout = HID_TIMEOUT;
     snprintf (params.packet, params.packetlen + 1 , "%c", OUT_REPORT_LCD_CLEAR);
@@ -301,7 +302,7 @@ void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column
     if (row > _USBLCD_MAX_ROWS) row = _USBLCD_MAX_ROWS;
     if (column > _USBLCD_MAX_COLS) column = _USBLCD_MAX_COLS;
     
-    params.endpoint = USB_ENDPOINT_OUT + 1;
+    params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
     /* 3 control bytes row, column, text length*/
     params.packetlen = len + 1 + 3;
     params.timeout = HID_TIMEOUT;
@@ -310,35 +311,24 @@ void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-int hid_close(void *handle)
-{
-    int ret;
-    ret = usb_close(handle);
-    
-    if (ret < 0) {
-	fprintf(stderr, "hid_close failed with return code %d\n", ret);
-	return 1;
-    }
-    return ret;
-}
-
 void usblcd_close(struct usblcd *usblcd)
 {
     if (usblcd->hiddev.handle) 
-	hid_close(usblcd->hiddev.handle);
+	libusb_close(usblcd->hiddev.handle);
 }
 
 int usblcd_read_events(struct usblcd *usblcd, struct usblcd_event *event)
 {
     int ret = -1;
-    char read_packet[_USBLCD_MAX_DATA_LEN];
+    int trans = 0;
+    unsigned char read_packet[_USBLCD_MAX_DATA_LEN];
 
     //hid_set_idle(usblcd->hiddev.handle, 0, 0);
          
-    ret = usb_interrupt_read(usblcd->hiddev.handle, USB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, 10000);
+    ret = libusb_interrupt_transfer(usblcd->hiddev.handle, LIBUSB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, &trans, 10000);
     
     if (ret > 0) {
-        switch ((unsigned char)read_packet[0]) {
+        switch (read_packet[0]) {
 	    case IN_REPORT_KEY_STATE:
 	    {	
 		event->type = 0;
