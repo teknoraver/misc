@@ -8,7 +8,7 @@ HEADERS := $(wildcard *.h)
 all: $(BIN)
 	strip -s $(BIN)
 
-$(BIN): $(HEADERS)
+$(BIN):
 	$(CC) $(CFLAGS) $(BIN).c -o $(BIN) $(LDFLAGS)
 
 clean:

@@ -3,7 +3,7 @@
 
 /* USB LCD general parameters */
 #define _USBLCD_IDVENDOR		0x04d8
-#define _USBLCD_IDPRODUCT		0x002
+#define _USBLCD_IDPRODUCT		0x0002
 
 #define _USBLCD_MAX_ROWS		1
 #define _USBLCD_MAX_COLS		19
