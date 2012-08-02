@@ -18,4 +18,4 @@ done
 
 gs -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$output $toc -f $@
 
-rm -f $toc
+exec rm -f $toc
