@@ -60,19 +60,33 @@ struct usblcd {
 }*/
 
 #ifdef DEBUG
-static char * hid_get_product(struct usb_device *dev, struct usb_dev_handle *devh)
+#include <ctype.h>
+static void print_buffer(unsigned char *bytes, int len) {
+    int i;
+    if (len > 0) {
+	for (i=0; i<len; i++)
+	    fprintf(stderr,"%02x ", (int)((unsigned char)bytes[i]));
+	fprintf(stderr,"\"");
+	for (i=0; i<len; i++)
+	    fprintf(stderr,"%c", isprint(bytes[i]) ? bytes[i] : '.');
+	fprintf(stderr,"\"\n");
+    }
+}
+
+static unsigned char * hid_get_product(libusb_device *dev, libusb_device_handle *devh)
 {
     int len;
     int BUFLEN = 256;
-    char *buffer;
+    unsigned char *buffer;
+    struct libusb_device_descriptor desc;
     
-    buffer = (char *) malloc (BUFLEN);
+    buffer = (unsigned char *)malloc (BUFLEN);
     
     if (buffer == NULL) 
 	return NULL;
-        
-    if (dev->descriptor.iProduct) {
-	len = usb_get_string_simple(devh, dev->descriptor.iProduct, buffer, BUFLEN);
+
+    if (!libusb_get_device_descriptor(dev, &desc) && desc.iProduct) {
+	len = libusb_get_string_descriptor_ascii(devh, desc.iProduct, buffer, BUFLEN);
 
 	if (len > 0)
 	    return buffer;
@@ -84,19 +98,20 @@ static char * hid_get_product(struct usb_device *dev, struct usb_dev_handle *dev
     return NULL;
 }
 
-static char * hid_get_manufacturer(struct usb_device *dev, struct usb_dev_handle *devh)
+static unsigned char * hid_get_manufacturer(libusb_device *dev, libusb_device_handle *devh)
 {
     int len;
     int BUFLEN = 256;
-    char *buffer;
+    unsigned char *buffer;
+    struct libusb_device_descriptor desc;
     
-    buffer = (char *) malloc (BUFLEN);
+    buffer = (unsigned char *)malloc (BUFLEN);
     
     if (buffer == NULL) 
 	return NULL;
         
-    if (dev->descriptor.iManufacturer) {
-	len = usb_get_string_simple(devh, dev->descriptor.iManufacturer, buffer, BUFLEN);
+    if (!libusb_get_device_descriptor(dev, &desc) && desc.iManufacturer) {
+	len = libusb_get_string_descriptor_ascii(devh, desc.iManufacturer, buffer, BUFLEN);
 
 	if (len > 0)
 	    return buffer;
@@ -108,19 +123,20 @@ static char * hid_get_manufacturer(struct usb_device *dev, struct usb_dev_handle
     return NULL;
 }
 
-static char * hid_get_serial(struct usb_device *dev, struct usb_dev_handle *devh)
+static unsigned char * hid_get_serial(libusb_device *dev, libusb_device_handle *devh)
 {
     int len;
     int BUFLEN = 256;
-    char *buffer;
+    unsigned char *buffer;
+    struct libusb_device_descriptor desc;
     
-    buffer = (char *) malloc (BUFLEN);
+    buffer = (unsigned char *)malloc (BUFLEN);
     
     if (buffer == NULL) 
 	return NULL;
         
-    if (dev->descriptor.iSerialNumber) {
-	len = usb_get_string_simple(devh, dev->descriptor.iSerialNumber, buffer, BUFLEN);
+    if (!libusb_get_device_descriptor(dev, &desc) && desc.iSerialNumber) {
+	len = libusb_get_string_descriptor_ascii(devh, desc.iSerialNumber, buffer, BUFLEN);
 
 	if (len > 0)
 	    return buffer;
@@ -135,8 +151,8 @@ static char * hid_get_serial(struct usb_device *dev, struct usb_dev_handle *devh
 
 int hid_init(struct hid_device *hiddev)
 {
-    int ret;
-    char buf[65535];
+//    int ret;
+//    char buf[65535];
     
     libusb_init(NULL);
     
@@ -144,14 +160,14 @@ int hid_init(struct hid_device *hiddev)
     
 //    usb_find_devices();
     
-    hiddev->device = libusb_open_device_with_vid_pid(NULL, _USBLCD_IDVENDOR, _USBLCD_IDPRODUCT);
+    hiddev->handle = libusb_open_device_with_vid_pid(NULL, _USBLCD_IDVENDOR, _USBLCD_IDPRODUCT);
     
-    if (hiddev->device == NULL) {
+    if (hiddev->handle == NULL) {
 	printf("Device not detected !\n");
 	exit (1);
     }
     
-    libusb_open(hiddev->device, &hiddev->handle);
+    hiddev->device = libusb_get_device(hiddev->handle);
 
 //	FIXME
 //    signal(SIGTERM, release_usb_device);
@@ -324,10 +340,10 @@ int usblcd_read_events(struct usblcd *usblcd, struct usblcd_event *event)
     unsigned char read_packet[_USBLCD_MAX_DATA_LEN];
 
     //hid_set_idle(usblcd->hiddev.handle, 0, 0);
-         
+
     ret = libusb_interrupt_transfer(usblcd->hiddev.handle, LIBUSB_ENDPOINT_IN + 1, read_packet, _USBLCD_MAX_DATA_LEN, &trans, 10000);
     
-    if (ret > 0) {
+    if (!ret) {
         switch (read_packet[0]) {
 	    case IN_REPORT_KEY_STATE:
 	    {	

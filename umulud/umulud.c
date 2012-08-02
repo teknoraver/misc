@@ -18,11 +18,11 @@
 
 #include <time.h>
 
-#include "usblcd.h"
-
 //#define DEBUG
 
 unsigned int debug_level = 0;
+
+#include "usblcd.h"
 
 #define SOCK_PATH "/tmp/umulud"
 
