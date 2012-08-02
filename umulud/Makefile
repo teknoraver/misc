@@ -1,14 +1,15 @@
-CFLAGS := -Wall -Wno-format -O2
-LDFLAGS := -pthread -lusb -lreadline
+CFLAGS := -Wall -Wno-format -O2 $(shell pkg-config --cflags libusb-1.0)
+LDFLAGS := -pthread -lreadline $(shell pkg-config --libs libusb-1.0)
 
 BIN := umulud
 
-HEADERS := debug.h driver.h usblcd.h
+HEADERS := $(wildcard *.h)
 
 all: $(BIN)
 	strip -s $(BIN)
 
 $(BIN): $(HEADERS)
+	$(CC) $(CFLAGS) $(BIN).c -o $(BIN) $(LDFLAGS)
 
 clean:
 	rm -f $(BIN)

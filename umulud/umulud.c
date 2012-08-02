@@ -17,7 +17,6 @@
 #include <sys/un.h>
 
 #include <time.h>
-#include <usb.h>
 
 #include "usblcd.h"
 
