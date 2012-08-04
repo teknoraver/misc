@@ -1,4 +1,4 @@
-CFLAGS := -Wall -Wno-format -O2 $(shell pkg-config --cflags libusb-1.0)
+CFLAGS := -Wall -O2 $(shell pkg-config --cflags libusb-1.0)
 LDFLAGS := -pthread -lreadline $(shell pkg-config --libs libusb-1.0)
 
 BIN := umulud
@@ -6,13 +6,12 @@ BIN := umulud
 HEADERS := $(wildcard *.h)
 
 all: $(BIN)
-	strip -s $(BIN)
 
-$(BIN):
-	$(CC) $(CFLAGS) $(BIN).c -o $(BIN) $(LDFLAGS)
+$(BIN): $(BIN).c $(HEADERS)
+	$(CC) $(CFLAGS) $< -o $@ $(LDFLAGS)
 
-clean:
+clean::
 	rm -f $(BIN)
 
-test: all
+test:: all
 	./$(BIN)

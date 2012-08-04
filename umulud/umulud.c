@@ -1,6 +1,3 @@
-/* Copyright 2006-2009 iTuner Corporation */
-/* npavel@ituner.com */
-
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -98,16 +95,21 @@ static void* showtext(void *arg)
 
 static void info(char line, char *txt)
 {
+	size_t readed;
 	char b2[8] = "";
 	FILE *t2 = fopen("/sys/devices/platform/coretemp.0/temp2_input", "r");
-	fread(b2, 1, sizeof(b2), t2);
+	readed = fread(b2, 1, sizeof(b2), t2);
 	fclose(t2);
+	if(!readed)
+		return;
 
 	if(line == 0) {
 		char b3[8] = "";
 		FILE *t3 = fopen("/sys/devices/platform/coretemp.0/temp3_input", "r");
-		fread(b3, 1, sizeof(b3), t3);
+		readed = fread(b3, 1, sizeof(b3), t3);
 		fclose(t3);
+		if(!readed)
+			return;
 
 		int temp = (atoi(b2) + atoi(b3)) / 2000;
 
@@ -121,8 +123,10 @@ static void info(char line, char *txt)
 	} else if(line == 1) {
 		int loadavg = -1;
 		FILE *proc = fopen("/proc/loadavg", "r");
-		fscanf(proc, "0.%d", &loadavg);
+		readed = fscanf(proc, "0.%d", &loadavg);
 		fclose(proc);
+		if(!readed)
+			return;
 
 		struct statvfs root;
 		statvfs("/", &root);
