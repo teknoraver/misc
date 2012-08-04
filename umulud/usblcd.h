@@ -149,7 +149,7 @@ static unsigned char * hid_get_serial(libusb_device *dev, libusb_device_handle *
 }
 #endif
 
-int hid_init(struct hid_device *hiddev)
+static int hid_init(struct hid_device *hiddev)
 {
     int ret;
     
@@ -200,7 +200,7 @@ int hid_init(struct hid_device *hiddev)
     return 0;
 }
 
-void hid_interrupt_write(void *handle, struct hid_params *params)
+static void hid_interrupt_write(void *handle, struct hid_params *params)
 {
     int ret;
     int trans = 0;
@@ -214,7 +214,7 @@ void hid_interrupt_write(void *handle, struct hid_params *params)
 	fprintf(stderr, "hid_interrupt_write failed with return code %d\n", ret);
 }
 
-void usblcd_getversion(struct usblcd *usblcd)
+static void usblcd_getversion(struct usblcd *usblcd)
 {
 
     struct hid_params params;
@@ -229,7 +229,7 @@ void usblcd_getversion(struct usblcd *usblcd)
 }
 
 
-void usblcd_init(struct usblcd *usblcd) 
+static void usblcd_init(struct usblcd *usblcd) 
 {
 	usblcd->state.usblcd_switch = _USBLCD_SWITCH_ON;
 	usblcd->state.usblcd_cursor = 0;
@@ -241,7 +241,7 @@ void usblcd_init(struct usblcd *usblcd)
 	usblcd_getversion(usblcd);
 }
 
-void usblcd_control(struct usblcd *usblcd)
+static void usblcd_control(struct usblcd *usblcd)
 {
     struct hid_params params;
     params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
@@ -252,14 +252,14 @@ void usblcd_control(struct usblcd *usblcd)
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_set_cursor(struct usblcd *usblcd, unsigned int status)
+static void usblcd_set_cursor(struct usblcd *usblcd, unsigned int status)
 {
     if (status) usblcd->state.usblcd_cursor = _USBLCD_CURSOR_ON;
     else usblcd->state.usblcd_cursor = 0;
     usblcd_control(usblcd);    
 }
 
-void usblcd_set_cursor_blink(struct usblcd *usblcd, unsigned int status)
+static void usblcd_set_cursor_blink(struct usblcd *usblcd, unsigned int status)
 {
     if (status) usblcd->state.usblcd_cursor_blink = _USBLCD_CURSOR_BLINK_ON;
     else usblcd->state.usblcd_cursor_blink = 0;
@@ -267,7 +267,7 @@ void usblcd_set_cursor_blink(struct usblcd *usblcd, unsigned int status)
     usblcd_control(usblcd);    
 }
 
-void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status) 
+static void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status) 
 {
     struct hid_params params;
     
@@ -286,7 +286,7 @@ void usblcd_setled(struct usblcd *usblcd, unsigned int led, unsigned int status)
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_backlight(struct usblcd *usblcd, unsigned int status) 
+static void usblcd_backlight(struct usblcd *usblcd, unsigned int status) 
 {
     struct hid_params params;
     params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
@@ -297,7 +297,7 @@ void usblcd_backlight(struct usblcd *usblcd, unsigned int status)
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_clear(struct usblcd *usblcd)
+static void usblcd_clear(struct usblcd *usblcd)
 {
     struct hid_params params;
     params.endpoint = LIBUSB_ENDPOINT_OUT + 1;
@@ -308,7 +308,7 @@ void usblcd_clear(struct usblcd *usblcd)
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column, char *text)
+static void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column, char *text)
 {
     struct hid_params params;
     unsigned int len;
@@ -328,13 +328,13 @@ void usblcd_settext(struct usblcd *usblcd, unsigned int row, unsigned int column
     hid_interrupt_write(usblcd->hiddev.handle, &params);
 }
 
-void usblcd_close(struct usblcd *usblcd)
+static void usblcd_close(struct usblcd *usblcd)
 {
     if (usblcd->hiddev.handle) 
 	libusb_close(usblcd->hiddev.handle);
 }
 
-int usblcd_read_events(struct usblcd *usblcd, struct usblcd_event *event)
+static int usblcd_read_events(struct usblcd *usblcd, struct usblcd_event *event)
 {
     int ret = -1;
     int trans = 0;
