@@ -151,8 +151,7 @@ static unsigned char * hid_get_serial(libusb_device *dev, libusb_device_handle *
 
 int hid_init(struct hid_device *hiddev)
 {
-//    int ret;
-//    char buf[65535];
+    int ret;
     
     libusb_init(NULL);
     
@@ -169,23 +168,25 @@ int hid_init(struct hid_device *hiddev)
     
     hiddev->device = libusb_get_device(hiddev->handle);
 
-//	FIXME
-//    signal(SIGTERM, release_usb_device);
-/*
-    ret = usb_get_driver_np(hiddev->handle, 0, buf, sizeof(buf));
+    //signal(SIGTERM, release_usb_device);
 
-    if (ret == 0) {
-	printf("interface 0 already claimed by driver \"%s\", attempting to detach it\n", buf);
-	ret = usb_detach_kernel_driver_np(hiddev->handle, 0);
-	printf("usb_detach_kernel_driver_np returned %d\n", ret);
-    }
-    ret = usb_claim_interface(hiddev->handle, 0);
-    if (ret != 0) {
-	printf("claim failed with error %d\n", ret);
+    ret = libusb_kernel_driver_active(hiddev->handle, 0);
+
+    if (ret) {
+	printf("interface 0 already claimed by a driver, attempting to detach it\n");
+	ret = libusb_detach_kernel_driver(hiddev->handle, 0);
+	if(ret) {
+		printf("libusb_detach_kernel_driver returned %d\n", ret);
 		exit(1);
+	}
+    }
+    ret = libusb_claim_interface(hiddev->handle, 0);
+    if (ret) {
+	printf("claim failed with error %d\n", ret);
+	exit(1);
     }
     
-    ret = usb_set_altinterface(hiddev->handle, 0);*/
+    libusb_set_interface_alt_setting(hiddev->handle, 0, 0);
     
     MESSAGE("Product: %s, Manufacturer: %s, Firmware Version: %s\n", hid_get_product(hiddev->device, hiddev->handle),
 	    hid_get_manufacturer(hiddev->device, hiddev->handle), hid_get_serial(hiddev->device, hiddev->handle));
