@@ -1,0 +1,6 @@
+Package: dropbox-installer
+Maintainer: Matteo Croce <rootkit85@yahoo.it>
+Version: 0.1
+Architecture: all
+Depends: curl
+Description: Utility package to install the Dropbox daemon its initscript

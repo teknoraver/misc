@@ -1,0 +1,16 @@
+#!/bin/sh
+
+init=/etc/init.d/dropbox
+
+arch=$(uname -m)
+
+[ $(uname -m) != x86_64 ] && arch=x86
+
+[ -x $init ] && $init stop
+
+cd /opt
+rm -rf dropbox
+curl -L "https://www.dropbox.com/download?plat=lnx.$arch" |tar xz
+mv .dropbox-dist dropbox
+
+[ -x $init ] && exec $init start
