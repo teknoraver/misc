@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 rename 'y/(\ [A-Z])/(\ [a-z])/' *
 for i in {a..z}; do
