@@ -1,0 +1,7 @@
+#!/bin/sh
+
+rename 'y/(\ [A-Z])/(\ [a-z])/' *
+for i in {a..z}; do
+	m=$(echo $i |tr '[a-z]' '[A-Z]')
+	rename "s/ $i/ $m/" *
+done
