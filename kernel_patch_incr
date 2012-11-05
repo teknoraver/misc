@@ -3,21 +3,79 @@
 ver=$(awk '/^VERSION/{print$3}' Makefile)
 patch=$(awk '/^PATCHLEVEL/{print$3}' Makefile)
 sub=$(awk '/^SUBLEVEL/{print$3}' Makefile)
-next=$((sub + 1))
 
 echo "Current kernel: $ver.$patch.$sub"
-quilt pop -a
 
-while curl -sI http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz |grep -q '200 OK'; do
-	url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz"
-	sub=$next
-	next=$((next + 1))
-done
+[ -d .pc ] && quilt pop -a
 
-echo "Upgrading to version: $ver.$patch.$sub"
+up_sub() {
+	next=$((sub + 1))
+	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz; do
+		url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz"
+		sub=$next
+		next=$((next + 1))
+	done
 
-curl -s $url |xz -d |patch -p1
+	echo "Upgrading to version: $ver.$patch.$sub"
 
-while quilt push; do
+	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+	echo
+}
+
+up_patch(){
+	if [ $sub -gt 0 ]; then
+		url=
+		next=$((sub - 1))
+		while [ $sub -gt 0 ] ; do
+			if [ $next -ne 0 ]; then
+				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$next-$sub.xz"
+			else
+				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+			fi
+			sub=$next
+			next=$((next - 1))
+		done
+
+		echo "Downgrading to version: $ver.$patch.$sub"
+
+		wget -qO- $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		echo
+	fi
+
+	url=
+	patch=$((patch + 1))
+	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.xz; do
+		url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.xz"
+		patch=$((patch + 1))
+	done
+	patch=$((patch - 1))
+
+	sub=1
+	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz; do
+		sub=$((sub + 1))
+	done
+	sub=$((sub - 1))
+	url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+
+	echo "Upgrading to version: $ver.$patch.$sub"
+
+	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+	echo
+}
+
+case $1 in
+patch)
+	up_patch
+	;;
+
+sub)
+	up_sub
+	;;
+
+*)
+	echo "usage: $0 [patch|sub]"
+esac
+
+[ -d .pc ] && while quilt push; do
 	quilt refresh
 done
