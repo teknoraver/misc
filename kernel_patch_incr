@@ -8,10 +8,15 @@ next=$((sub + 1))
 echo "Current kernel: $ver.$patch.$sub"
 quilt pop -a
 
-while curl -sI http://www.kernel.org/pub/linux/kernel/v3.0/incr/patch-$ver.$patch.$sub-$next.xz |grep -q '^HTTP/1.1 200 OK$'; do
-	curl -s http://www.kernel.org/pub/linux/kernel/v3.0/incr/patch-$ver.$patch.$sub-$next.xz |xz -d |patch -p1
+while curl -sI http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz |grep -q '200 OK'; do
+	url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz"
+	sub=$next
 	next=$((next + 1))
 done
+
+echo "Upgrading to version: $ver.$patch.$sub"
+
+curl -s $url |xz -d |patch -p1
 
 while quilt push; do
 	quilt refresh
