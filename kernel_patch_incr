@@ -1,0 +1,18 @@
+#!/bin/sh
+
+ver=$(awk '/^VERSION/{print$3}' Makefile)
+patch=$(awk '/^PATCHLEVEL/{print$3}' Makefile)
+sub=$(awk '/^SUBLEVEL/{print$3}' Makefile)
+next=$((sub + 1))
+
+echo "Current kernel: $ver.$patch.$sub"
+quilt pop -a
+
+while curl -sI http://www.kernel.org/pub/linux/kernel/v3.0/incr/patch-$ver.$patch.$sub-$next.xz |grep -q '^HTTP/1.1 200 OK$'; do
+	curl -s http://www.kernel.org/pub/linux/kernel/v3.0/incr/patch-$ver.$patch.$sub-$next.xz |xz -d |patch -p1
+	next=$((next + 1))
+done
+
+while quilt push; do
+	quilt refresh
+done
