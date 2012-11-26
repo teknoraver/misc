@@ -1,28 +1,22 @@
 #!/bin/sh
+# (C) Copyright Matteo Croce <matteo@openwrt.org> 2012
+#       Released under GPL v2.
+#
+# Usage: kernel_patch_incr [patch|sub]
+#
 
 ver=$(awk '/^VERSION/{print$3}' Makefile)
 patch=$(awk '/^PATCHLEVEL/{print$3}' Makefile)
 sub=$(awk '/^SUBLEVEL/{print$3}' Makefile)
+
+[ -f Makefile -a -n "$ver" -a -n "$patch" -a -n "$sub" ] || exec echo 'Invalid source tree'
 
 echo "Current kernel: $ver.$patch.$sub"
 
 [ -d .pc ] && quilt pop -a
 
 up_sub() {
-	next=$((sub + 1))
-	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz; do
-		url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$sub-$next.xz"
-		sub=$next
-		next=$((next + 1))
-	done
-
-	echo "Upgrading to version: $ver.$patch.$sub"
-
-	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
-	echo
-}
-
-up_patch(){
+	# if the patchlevel isn't 0 downgrade to X.Y.0
 	if [ $sub -gt 0 ]; then
 		url=
 		next=$((sub - 1))
@@ -42,6 +36,42 @@ up_patch(){
 		echo
 	fi
 
+	# now upgrade to latest rev available
+	sub=1
+	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz; do
+		sub=$((sub + 1))
+	done
+	sub=$((sub - 1))
+	url="http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+
+	echo "Upgrading to version: $ver.$patch.$sub"
+
+	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+	echo
+}
+
+up_patch(){
+	# downgrade to X.Y.0
+	if [ $sub -gt 0 ]; then
+		url=
+		next=$((sub - 1))
+		while [ $sub -gt 0 ] ; do
+			if [ $next -ne 0 ]; then
+				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$next-$sub.xz"
+			else
+				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+			fi
+			sub=$next
+			next=$((next - 1))
+		done
+
+		echo "Downgrading to version: $ver.$patch.$sub"
+
+		wget -qO- $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		echo
+	fi
+
+	# find the latest rev
 	url=
 	patch=$((patch + 1))
 	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.xz; do
@@ -50,22 +80,18 @@ up_patch(){
 	done
 	patch=$((patch - 1))
 
-	sub=1
-	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz; do
-		sub=$((sub + 1))
-	done
-	sub=$((sub - 1))
-	url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
-
-	echo "Upgrading to version: $ver.$patch.$sub"
-
-	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
-	echo
+	# upgrade to latest patchlevel if necessary
+	if [ -n "$url" ]; then
+		echo "Upgrading to version: $ver.$patch.$sub"
+		wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		echo
+	fi
 }
 
 case $1 in
 patch)
 	up_patch
+	up_sub
 	;;
 
 sub)
