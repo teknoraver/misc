@@ -42,6 +42,7 @@ up_sub() {
 		sub=$((sub + 1))
 	done
 	sub=$((sub - 1))
+	[ $sub -eq 0 ] && exit
 	url="http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
 
 	echo "Upgrading to version: $ver.$patch.$sub"
