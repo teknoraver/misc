@@ -1,0 +1,14 @@
+#!/bin/sh
+
+music=~/Dropbox/Musica
+sdcard=/tmp/musync-$$
+
+u=$(id -un)
+g=$(id -gn)
+
+mkdir $sdcard
+
+sudo mount /dev/mmcblk0 $sdcard -o "uid=$u,gid=$g,dmask=7022,fmask=7133"
+rsync -rvt --modify-window 1 --del --exclude playlist.m3u --exclude front.jpg "$music/" "$sdcard/"
+sudo umount /dev/mmcblk0
+rmdir $sdcard
