@@ -1,0 +1,15 @@
+#!/bin/sh
+
+[ $# -ne 1 ] && exec echo "usage: $0 AppName"
+
+app=$1
+up=$(echo $app |tr [a-z] [A-Z])
+low=$(echo $app |tr [A-Z] [a-z])
+
+git clone git://github.com/teknoraver/template.git $low
+cd $low
+rename s/template/$low/ *
+for file in *; do
+	sed -e s/template/$low/g -e s/TEMPLATE/$up/g -e s/Template/$app/g -i $file
+done
+rm -rf .gitignore .git
