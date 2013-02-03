@@ -121,9 +121,9 @@ static void info(char line, char *txt)
 			now->tm_hour, now->tm_sec & 1 ? ':' : ' ' ,now->tm_min);
 
 	} else if(line == 1) {
-		int loadavg = -1;
+		float loadavg = -1;
 		FILE *proc = fopen("/proc/loadavg", "r");
-		readed = fscanf(proc, "0.%d", &loadavg);
+		readed = fscanf(proc, "%f", &loadavg);
 		fclose(proc);
 		if(!readed)
 			return;
@@ -131,7 +131,7 @@ static void info(char line, char *txt)
 		struct statvfs root;
 		statvfs("/", &root);
 
-		sprintf(txt, "CPU:% 3d%% disk:% 4ldGB", loadavg, root.f_bavail * root.f_bsize / 0x40000000);
+		sprintf(txt, "CPU:%3d%% HDD: %4ldGB", (int)(loadavg * 100), root.f_bavail * root.f_bsize / 0x40000000);
 	}
 
 //	printf("%s\n", outtext);
