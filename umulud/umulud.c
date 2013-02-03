@@ -1,6 +1,3 @@
-/* Copyright 2006-2009 iTuner Corporation */
-/* npavel@ituner.com */
-
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -17,16 +14,12 @@
 #include <sys/un.h>
 
 #include <time.h>
-#include <usb.h>
-
-#include "usblcd.h"
-// #include "rc5.h"
-// #include "widgets.h"
 
 //#define DEBUG
-#undef DEBUG
 
-unsigned int debug_level = HID_DEBUG_ERRORS | HID_DEBUG_WARNINGS | HID_DEBUG_NOTICES;
+unsigned int debug_level = 0;
+
+#include "usblcd.h"
 
 #define SOCK_PATH "/tmp/umulud"
 
@@ -57,7 +50,7 @@ static time_t last;
 
 
 /* for connecting and communication with the device */
-usblcd_operations mylcd;
+struct usblcd mylcd;
 
 static void do_key(int);
 static void* blink(void *);
@@ -72,10 +65,8 @@ static void* blink(void *arg)
 {
 	struct blink_info *info = (struct blink_info *) arg;
 	while(1) {
-//		mylcd->setled(mylcd, info->led - F1 + 1, 1);
 		usblcd_setled(&mylcd, info->led - F1 + 1, 1);
 		usleep(info->time * 1000);
-//		mylcd->setled(mylcd, info->led - F1 + 1, 0);
 		usblcd_setled(&mylcd, info->led - F1 + 1, 0);
 		usleep(info->time * 1000);
 	}
@@ -87,17 +78,13 @@ static void* showtext(void *arg)
 	while(1) {
 		if(time(NULL) - last > 30) {
 			status.light = 0;
-//			mylcd->backlight(mylcd, 0);
-//			mylcd->clear(mylcd);
 			usblcd_backlight(&mylcd, 0);
 			usblcd_clear(&mylcd);
 		} else {
 			char txt[21];
 			info(0, txt);
-//			mylcd->settext(mylcd, 0, 0, txt);
 			usblcd_settext(&mylcd, 0, 0, txt);
 			info(1, txt);
-//			mylcd->settext(mylcd, 1, 0, txt);
 			usblcd_settext(&mylcd, 1, 0, txt);
 		}
 
@@ -108,16 +95,21 @@ static void* showtext(void *arg)
 
 static void info(char line, char *txt)
 {
+	size_t readed;
 	char b2[8] = "";
 	FILE *t2 = fopen("/sys/devices/platform/coretemp.0/temp2_input", "r");
-	fread(b2, 1, sizeof(b2), t2);
+	readed = fread(b2, 1, sizeof(b2), t2);
 	fclose(t2);
+	if(!readed)
+		return;
 
 	if(line == 0) {
 		char b3[8] = "";
 		FILE *t3 = fopen("/sys/devices/platform/coretemp.0/temp3_input", "r");
-		fread(b3, 1, sizeof(b3), t3);
+		readed = fread(b3, 1, sizeof(b3), t3);
 		fclose(t3);
+		if(!readed)
+			return;
 
 		int temp = (atoi(b2) + atoi(b3)) / 2000;
 
@@ -129,21 +121,22 @@ static void info(char line, char *txt)
 			now->tm_hour, now->tm_sec & 1 ? ':' : ' ' ,now->tm_min);
 
 	} else if(line == 1) {
-		float loadavg = -1;
+		int loadavg = -1;
 		FILE *proc = fopen("/proc/loadavg", "r");
-		fscanf(proc, "%f", &loadavg);
+		readed = fscanf(proc, "0.%d", &loadavg);
 		fclose(proc);
+		if(!readed)
+			return;
 
 		struct statvfs root;
 		statvfs("/", &root);
 
-		sprintf(txt, "CPU:%3d%% HDD: %4ldGB", (int)(loadavg * 100), root.f_bavail * root.f_bsize / 0x40000000);
+		sprintf(txt, "CPU:% 3d%% disk:% 4ldGB", loadavg, root.f_bavail * root.f_bsize / 0x40000000);
 	}
 
 //	printf("%s\n", outtext);
 }
 
-// #define PORT 34567
 #define LINE 80
 
 enum cmds {
@@ -304,13 +297,11 @@ static void do_key(int key)
 		pthread_cancel(blinkt);
 
 		status.led[key - F1 + 1] = !!ret;
-//		mylcd->setled(mylcd, key - F1 + 1, !!ret);
 		usblcd_setled(&mylcd, key - F1 + 1, !!ret);
 	}
 		break;
 	case VOLUP ... VOLDOWN:
 		status.light = 1;
-//		mylcd->backlight(mylcd, 1);
 		usblcd_backlight(&mylcd, 1);
 		last = time(NULL);
 		break;
@@ -320,38 +311,28 @@ static void do_key(int key)
 int main (int argc, char **argv)
 {
 	/* for keypad and infrared events */
-	usblcd_event *event;
+	struct usblcd_event event;
 	last = time(NULL);
 
 #ifdef RC5
 	rc5decoder *rc5;
 #endif
 
-	/* init hid device and usblcd_operations structure */
-	//mylcd = new_usblcd_operations();
+	/* init hid device and struct usblcd structure */
+	//mylcd = new_struct usblcd();
 	memset(&mylcd, 0, sizeof(mylcd));
-	
-	/* set hid debug level */
-	//mylcd->hid->debug(0);
-	/* set usblcd debug level */
-	//mylcd->debug(0);
+
 	/* init the USB LCD */
-	//mylcd->init(mylcd);
 	usblcd_init(&mylcd);
 	/* turn off backlight */
-	//mylcd->backlight(mylcd, 0);
 	usblcd_backlight(&mylcd, 0);
 	/* clear the LCD screen */
-//	mylcd->clear(mylcd);
 	usblcd_clear(&mylcd);
 	/* clear all leds status */
-//	mylcd->setled(mylcd, 0, 0);
 	usblcd_setled(&mylcd, 0, 0);
 	/* set default cursor */
-//	mylcd->set_cursor(mylcd, 0);
 	usblcd_set_cursor(&mylcd, 0);
 	/* set default non blink cursor */
-//	mylcd->set_cursor_blink(mylcd, 0);
 	usblcd_set_cursor_blink(&mylcd, 0);
 
 #ifdef RC5
@@ -367,33 +348,23 @@ int main (int argc, char **argv)
 	pthread_create(&servert, NULL, server, NULL);
 
 	while (1) {
-//		if ((event = mylcd->read_events(mylcd)) == NULL) {
-		if ((event = usblcd_read_events(&mylcd)) == NULL) {
-			usleep(333 * 1000);
+		if (!usblcd_read_events(&mylcd, &event))
 			continue;
-		}
 
-		if (event->type == 0 && event->data[0]) {
-			int key = event->data[0];
+		if (event.type == 0 && event.data[0]) {
+			int key = event.data[0];
 			printf("%d\n", key);
 			do_key(key);
 		}
 
 #ifdef RC5
-		if (event->type == 1) {
-		    rc5_decode(rc5, event->data, event->length);
-		}
+		if (event.type == 1)
+		    rc5_decode(rc5, event.data, event.length);
 #endif
-
-		usleep(333 * 1000);
-
-		free(event->data);
-		free(event);
 	}
 
 	pthread_cancel(textt);
 
-//	mylcd->close(mylcd);
 	usblcd_close(&mylcd);
 
 	return 0;
