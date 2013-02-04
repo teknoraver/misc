@@ -131,7 +131,7 @@ static void info(char line, char *txt)
 		struct statvfs root;
 		statvfs("/", &root);
 
-		sprintf(txt, "CPU:%3d%% HDD: %4ldGB", (int)(loadavg * 100), root.f_bavail * root.f_bsize / 0x40000000);
+		sprintf(txt, "CPU:%3d%% HDD: %4luGB", (int)(loadavg * 100), root.f_bavail * root.f_bsize / 0x40000000UL);
 	}
 
 //	printf("%s\n", outtext);
