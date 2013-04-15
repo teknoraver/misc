@@ -1,0 +1,9 @@
+#!/bin/sh
+
+rulefile=/etc/udev/rules.d/51-android.rules
+url=http://developer.android.com/tools/device.html
+rule='/<td><code>....<\/code><\/td>/{print "SUBSYSTEM==\"usb\", ATTR{idVendor}==\""$5"\", MODE=\"0660\", GROUP=\"plugdev\""}'
+
+curl -s $url | awk -F'<|>' "$rule" >$rulefile
+
+chmod 755 $rulefile
