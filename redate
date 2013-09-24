@@ -1,0 +1,7 @@
+#!/bin/sh
+
+exiftool "$1" |grep -q '^Date/Time Original' && exec echo "$1 already dated"
+
+date=$(date -r "$1" '+%Y:%m:%d %R:%S')
+
+exiftool -overwrite_original -AllDates="$date" -P "$1"
