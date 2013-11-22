@@ -1,0 +1,33 @@
+#!/bin/sh
+
+if [ $# -eq 1 ]; then
+	file="$1"
+	n=0
+elif [ $# -eq 2 -a "$1" = -n ]; then
+	file="$2"
+	n=1
+else
+	exec echo "$0 [-n] <file>"
+fi
+
+size=$(convert "$file" -print '%wx%h' /dev/null)
+
+case "${size}n$n" in
+	1080x1920n0)
+		crop=1080x1701+0+75
+	;;
+	1080x1920n1)
+		crop=1080x1776+0+0
+	;;
+	1920x1080n0)
+		crop=1794x1005+0+75
+	;;
+	1920x1080n1)
+		crop=1794x1080+0+0
+	;;
+	*)
+		exec echo "invalid size '$size'"
+	;;
+esac
+
+exec mogrify -crop $crop "$file"
