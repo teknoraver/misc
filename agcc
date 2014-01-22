@@ -1,0 +1,26 @@
+#!/bin/sh
+
+ndk=/home/matteo/android-ndk-r9c
+
+arch=$AGCCARCH
+
+case $arch in
+arm)	archx=arm-linux-androideabi
+	bin=$archx-gcc
+#	flags='-mfloat-abi=softfp -march=armv5te -mfpu=vfpv3-d16'
+#	flags='-mfloat-abi=softfp -march=armv5te -mfpu=neon'
+#	flags='-mfloat-abi=softfp -march=armv7-a -mfpu=vfpv3-d16'
+	flags='-mfloat-abi=soft'
+	;;
+x86)	archx=x86
+	bin=i686-linux-android-gcc
+	flags='-march=atom'
+	;;
+mips)	archx=mipsel-linux-android
+	bin=$archx-gcc
+	;;
+esac
+
+toolchain=$ndk/toolchains/$archx-4.8/prebuilt/linux-$(uname -m)
+
+exec $toolchain/bin/$bin $flags --sysroot=$ndk/platforms/android-19/arch-$arch $@
