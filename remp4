@@ -1,0 +1,20 @@
+#!/bin/sh
+
+src=/tmp/remp4-src-$$.mp4
+tmp=/tmp/remp4-$$.264
+
+# MP4Box fails to handle path with spaces
+mv -f "$1" $src
+
+trackid=$(MP4Box -info $src 2>&1 |awk '/TrackID/{track=$3};/H264/{print track}')
+
+x264encopts='crf=24'
+fps=30
+
+mencoder $src -fps 30 -nosound -vf harddup -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
+
+MP4Box -rem 1 $src
+MP4Box -add $tmp $src
+
+rm $tmp
+mv $src "$1"
