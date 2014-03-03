@@ -10,7 +10,7 @@ oldsize=$(stat $src --printf=%s)
 
 trackid=$(MP4Box -info $src 2>&1 |awk '/TrackID/{track=$3};/H264/{print track}')
 
-x264encopts='crf=24'
+x264encopts='crf=24:frameref=5:b_pyramid=normal:direct_pred=auto:weight_b:partitions=all:8x8dct:me=umh:subq=9:mixed_refs:trellis=2'
 fps=30
 
 vf='scale=-10:720'
