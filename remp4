@@ -13,11 +13,11 @@ trackid=$(MP4Box -info $src 2>&1 |awk '/TrackID/{track=$3};/H264/{print track}')
 x264encopts='crf=24:frameref=5:b_pyramid=normal:direct_pred=auto:weight_b:partitions=all:8x8dct:me=umh:subq=9:mixed_refs:trellis=2'
 fps=30
 
-vf='scale=-10:720'
+vf=''
 
-mencoder $src $vf -fps 30 -nosound -vf $vf,harddup -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
+mencoder $src $vf -fps $fps -nosound -vf ${vf}harddup -nosound -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
 
-MP4Box -rem 1 $src
+MP4Box -rem $trackid $src
 MP4Box -add $tmp $src
 
 newsize=$(stat $tmp --printf=%s)
