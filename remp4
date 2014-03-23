@@ -15,7 +15,7 @@ fps=30
 
 vf=''
 
-mencoder $src $vf -fps $fps -nosound -vf ${vf}harddup -nosound -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
+mencoder $src -fps $fps -nosound -vf ${vf}harddup -nosound -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
 
 MP4Box -rem $trackid $src
 MP4Box -add $tmp $src
@@ -25,6 +25,7 @@ newsize=$(stat $tmp --printf=%s)
 if [ $((newsize * 11)) -lt $((oldsize * 10)) ]; then
 	rm $tmp
 	mv $src "$1"
+	echo "$((oldsize / 1048576)) ==> $((newsize / 1048576)) MB ($((newsize*100/oldsize))%)"
 else
 	mv $tmp "$1"
 fi
