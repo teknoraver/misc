@@ -7,6 +7,11 @@
 
 #define BLOCK 65536
 
+/*
+ * findnull - find files with all content of binary 0
+ * example usage: find / -xdev -type f -print0 |xargs -0 ./findnull
+ */
+
 void findnull(char *path)
 {
 	int i;
