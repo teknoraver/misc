@@ -1,0 +1,35 @@
+#!/bin/sh
+
+jpg=/tmp/photosphere-$$.jpg
+
+cp "$1" $jpg
+
+w=$(identify -format %w $jpg)
+h=$(identify -format %h $jpg)
+
+cat >/tmp/photosphere-$$.xmp <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/" x:xmptk="Adobe XMP Core 5.1.0-jc003">
+	<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+		<rdf:Description rdf:about="" xmlns:GPano="http://ns.google.com/photos/1.0/panorama/"
+			GPano:UsePanoramaViewer="True"
+			GPano:ProjectionType="equirectangular"
+			GPano:CroppedAreaImageHeightPixels="$h"
+			GPano:CroppedAreaImageWidthPixels="$w"
+			GPano:FullPanoHeightPixels="$h"
+			GPano:FullPanoWidthPixels="$w"
+			GPano:CroppedAreaTopPixels="0"
+			GPano:CroppedAreaLeftPixels="0"
+			GPano:PoseHeadingDegrees="0"
+			GPano:LargestValidInteriorRectLeft="0"
+			GPano:LargestValidInteriorRectTop="0"
+			GPano:LargestValidInteriorRectWidth="$w"
+			GPano:LargestValidInteriorRectHeight="$h"/>
+	</rdf:RDF>
+</x:xmpmeta>
+EOF
+
+exiv2 -i X in $jpg
+
+mv $jpg "$1"
+rm /tmp/photosphere-$$.xmp
