@@ -1,0 +1,14 @@
+#!/bin/sh
+
+[ $# -ne 3 ] && exec echo "usage: $0 kernel.bin rootdir myboot.img"
+
+cmdline='console=ttyHSL0,115200,n8 androidboot.hardware=hammerhead user_debug=31 maxcpus=2 msm_watchdog_v2.enable=1'
+
+(
+cd "$2" 
+find * |fakeroot cpio -o -H newc |gzip -9 >/tmp/ramdisk-$$.bin.gz
+)
+
+mkbootimg --kernel "$1" --ramdisk /tmp/ramdisk-$$.bin.gz --cmdline "$cmdline" --base 0 --pagesize 2048 --ramdisk_offset 2900000 --tags_offset 2700000 -o "$3"
+
+rm -f /tmp/ramdisk-$$.bin.gz
