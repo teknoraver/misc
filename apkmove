@@ -4,12 +4,6 @@ dir=/tmp/asec.$$
 
 adb pull /mnt/asec $dir
 
-a=$(find $dir -type f -name '*.apk')
-
-[ -z "$a" ] && exit
-
-for i in $a ; do
-	adb install -r $i
-done
+find $dir -type f -name '*.apk' -print0 |xargs -0n1 adb install -r
 
 rm -rf $dir
