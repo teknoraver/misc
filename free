@@ -1,0 +1,10 @@
+#!/bin/sh
+
+eval $(awk -F':| +' '/^(MemTotal|Cached|Buffers|MemFree)/{print $1"="int($3/1024)}' /proc/meminfo)
+
+for fs in $(awk '/tmpfs/{print$2}' /proc/mounts); do
+	Cached=$((Cached - $(df -m $fs |awk '!/File system/{print$3}')))
+done
+
+exec echo "	Total	Avail	(Cached + Buffers + Free)
+	$MemTotal	$((Cached + Buffers + MemFree))	($Cached + $Buffers + $MemFree)"
