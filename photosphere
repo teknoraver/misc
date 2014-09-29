@@ -1,5 +1,11 @@
 #!/bin/sh
 
+[ -f "$1" ] || exec echo "can't find '$1'"
+
+for i in exiv2 identify; do
+	which $i >/dev/null || exec "$i is not installed"
+done
+
 jpg=/tmp/photosphere-$$.jpg
 
 cp "$1" $jpg
