@@ -11,13 +11,13 @@ gsopt='-dAutoFilterColorImages=false -dAutoFilterGrayImages=false -dColorImageFi
 
 page=1
 chapter=1
-for i in $@; do
+for i; do
 	echo "[/Page $page /View [/XYZ null null null] /Title ($chapter) /OUT pdfmark" >>$toc
 	pagecount=$(gs -q -dNODISPLAY -c "($i) (r) file runpdfbegin pdfpagecount = quit")
 	page=$((page + pagecount))
 	chapter=$((chapter + 1))
 done
 
-gs $gsopt -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$output $toc -f $@
+gs $gsopt -dBATCH -dNOPAUSE -sDEVICE=pdfwrite -sOutputFile=$output $toc -f "$@"
 
 exec rm -f $toc
