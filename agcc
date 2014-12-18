@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ndk=/home/matteo/android-ndk-r9c
+ndk=/home/matteo/android-ndk-r10d
 
 arch=$AGCCARCH
 
@@ -21,6 +21,6 @@ mips)	archx=mipsel-linux-android
 	;;
 esac
 
-toolchain=$ndk/toolchains/$archx-4.8/prebuilt/linux-$(uname -m)
+toolchain=$ndk/toolchains/$archx-4.9/prebuilt/linux-$(uname -m)
 
-exec $toolchain/bin/$bin $flags --sysroot=$ndk/platforms/android-19/arch-$arch $@
+exec $toolchain/bin/$bin -fPIE -pie $flags --sysroot=$ndk/platforms/android-21/arch-$arch $@
