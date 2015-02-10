@@ -1,39 +1,34 @@
 #!/bin/sh
 
-src=/tmp/remp4-src-$$.mp4
 tmp=/tmp/remp4-$$.264
 new=/tmp/remp4-new-$$.mp4
 aac=/tmp/remp4-$$.aac
 
-# MP4Box fails to handle path with spaces
-mv -f "$1" $src
+oldsize=$(stat "$1" --printf=%s)
 
-oldsize=$(stat $src --printf=%s)
-
-vtrackid=$(MP4Box -info $src 2>&1 |awk '/TrackID/{track=$3};/H264/{if(track)print track}')
-atrackid=$(MP4Box -info $src 2>&1 |awk '/TrackID/{track=$3};/AAC/{if(track)print track}')
+vtrackid=$(MP4Box -info "$1" 2>&1 |awk '/TrackID/{track=$3};/H264/{if(track)print track}')
+atrackid=$(MP4Box -info "$1" 2>&1 |awk '/TrackID/{track=$3};/AAC/{if(track)print track}')
 
 x264encopts='crf=24:frameref=5:b_pyramid=normal:direct_pred=auto:weight_b:partitions=all:8x8dct:me=umh:subq=9:mixed_refs:trellis=2'
 fps=30
 
 vf=''
 
-mencoder $src -fps $fps -nosound -vf ${vf}harddup -nosound -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
+mencoder "$1" -fps $fps -nosound -vf ${vf}harddup -nosound -ovc x264 -o $tmp -of rawvideo -x264encopts $x264encopts
 
 MP4Box -brand mp42 -no-iod -no-sys -new -add $tmp $new
 if [ -n "$atrackid" ]; then
-	MP4Box -raw "$atrackid:output=$aac" $src
+	MP4Box -raw "$atrackid:output=$aac" "$1"
 	MP4Box -add $aac $new
 fi
 rm -f $tmp $aac
 
 newsize=$(stat $new --printf=%s)
 
+echo "$((oldsize / 1048576)) ==> $((newsize / 1048576)) MB ($((newsize*100/oldsize))%)"
 if [ $((newsize * 11)) -lt $((oldsize * 10)) ]; then
-	rm -f $src
 	mv $new "$1"
-	echo "$((oldsize / 1048576)) ==> $((newsize / 1048576)) MB ($((newsize*100/oldsize))%)"
 else
 	rm -f $new
-	mv $src "$1"
+	echo 'Keeping old file'
 fi
