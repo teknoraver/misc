@@ -1,0 +1,7 @@
+#!/bin/sh
+
+[ -f /var/lib/ieee-data/oui.txt ] || exec echo 'OUI database not found!'
+
+mac="$(echo "$1" |tr -d '[:]')"
+
+grep -i "^  $1" /var/lib/ieee-data/oui.txt |sed 's/.*(.*)\s*//'

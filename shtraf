@@ -1,0 +1,15 @@
+#!/bin/sh
+
+while true; do
+	for dev; do
+		eval read rx_$dev </sys/class/net/$dev/statistics/rx_bytes
+		eval read tx_$dev </sys/class/net/$dev/statistics/tx_bytes
+	done
+	sleep 1
+	for dev; do
+		eval read newrx_$dev </sys/class/net/$dev/statistics/rx_bytes
+		eval read newtx_$dev </sys/class/net/$dev/statistics/tx_bytes
+
+		eval echo "'$dev	{rx $(((newrx_$dev-rx_$dev) / 125)) tx $(((newtx_$dev-tx_$dev) / 125))}'"
+	done
+done
