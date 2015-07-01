@@ -1,10 +1,10 @@
 #!/bin/sh
 
-# taken from http://dev.gentoo.org/~vapier/clean-patches
+# Taken from http://dev.gentoo.org/~vapier/clean-patches
+# Adapted by me for gsed compatibility
+# added binary files and stript first path element by teknoraver
 
-[ $# -gt 0 ] && i=-i
-
-exec sed $i \
+exec sed $sedopt \
 	-e '/^index /d' \
 	-e '/^new file mode /d' \
 	-e '/^Index:/d' \
@@ -15,10 +15,9 @@ exec sed $i \
 	-e '/^Files .* differ$/d' \
 	-e '/^Only in /d' \
 	-e '/^Common subdirectories/d' \
-	-e '/^deleted file mode [0-9]*$/d' \
-	-e '/^Binary files .* differ/d' \
 	-e '/^+++/s:\t.*::' \
 	-e '/^---/s:\t.*::' \
-	-e 's/^--- [^/]*\//--- a\//' \
-	-e 's/^+++ [^/]*\//+++ b\//' \
-	"$@"
+	-e '/^+++/s:^+++ [^/]*/:+++ b/:' \
+	-e '/^---/s:^--- [^/]*/:--- a/:' \
+	-e '/^Binary files .* and .* differ$/d' \
+	"${@}"
