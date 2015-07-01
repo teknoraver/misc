@@ -1,0 +1,5 @@
+#!/bin/sh
+
+for i; do
+	grep -H '#include' "$i" |sed -e 's/#include *//' -e '/<.*>/s/[<>]//g' -e '/".*"/s/"//g' |sort |uniq -d
+done
