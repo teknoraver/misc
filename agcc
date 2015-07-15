@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ndk=/home/matteo/android-ndk-r10d
+ndk=/home/matteo/android-ndk-r10e
 
 arch=$AGCCARCH
 
@@ -11,6 +11,10 @@ arm)	archx=arm-linux-androideabi
 #	flags='-mfloat-abi=softfp -march=armv5te -mfpu=neon'
 #	flags='-mfloat-abi=softfp -march=armv7-a -mfpu=vfpv3-d16'
 	flags='-mfloat-abi=soft'
+	;;
+arm64)
+	archx=aarch64-linux-android
+	bin=aarch64-linux-android-gcc
 	;;
 x86)	archx=x86
 	bin=i686-linux-android-gcc
