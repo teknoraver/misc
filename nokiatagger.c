@@ -30,7 +30,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define GENRES_LENGTH 80
+#define GENRES_LENGTH (sizeof(genres) / sizeof(genres[0]))
 
 char *genres[] = {
 	"Blues", "Classic Rock", "Country", "Dance",
@@ -73,12 +73,22 @@ void usage(char *name)
 			"\t-c\twrite comment\n"
 			"\t-g\twrite genre\n\n"
 			"\t-l\tprints list of genres and quits\n\n"
-			"Written by Matteo Croce <rootkit85@yahoo.it>\n"
-			, name);
+			"Written by Matteo Croce <rootkit85@yahoo.it>\n",
+			name);
 	exit(0);
 }
 
-#define TAG_LENGTH 129
+#define TAG_LENGTH sizeof(struct tag)
+
+struct tag {
+	char magic[4];
+	char title[30];
+	char author[30];
+	char album[30];
+	char year[4];
+	char comment[30];
+	unsigned char genre;
+};
 
 int main(int argc, char *argv[])
 {
@@ -89,13 +99,7 @@ int main(int argc, char *argv[])
 	char *myc = 0;
 	unsigned char myg = 0;
 
-	char tag[TAG_LENGTH];
-	char *title = tag + 4;
-	char *author = title + 30;
-	char *album = author + 30;
-	char *year = album + 30;
-	char *comment = year + 4;
-	unsigned char *genre = (unsigned char *)comment + 30;
+	struct tag tag;
 
 	int c;
 	opterr = 0;
@@ -138,54 +142,61 @@ int main(int argc, char *argv[])
 			usage(argv[0]);
 		}
 
-		if(optind == argc - 1) {
-			const char magic[4] = "\x1cTAG";
-			int file;
-			if(myt || mya || myA || myy || myc || myg)
-				file = open(argv[optind], O_RDWR);
-			else
-				file = open(argv[optind], O_RDONLY);
-			if(file == -1) {
-				perror("open");
-				return 1;
-			}
-			lseek(file, -TAG_LENGTH, SEEK_END);
-			read(file, &tag, sizeof(tag));
-			if(strncmp(tag, magic, 4)) {
-				lseek(file, 0, SEEK_END);
-				strncpy(tag, magic, 4);
-				bzero(tag + 4, TAG_LENGTH - 4);
-				*genre = 0xc;
-			} else
-				lseek(file, -TAG_LENGTH, SEEK_END);
-			if(myt)
-				strncpy(title, myt, 30);
-			if(mya)
-				strncpy(author, mya, 30);
-			if(myA)
-				strncpy(album, myA, 30);
-			if(myy)
-				strncpy(year, myy, 4);
-			if(myc)
-				strncpy(comment, myc, 30);
-			if(myg)
-				*genre = myg;
+	if(optind != argc - 1)
+		usage(argv[0]);
 
-			printf(	"%s tags:\n"
-				"Title:\t\t%.30s\n"
-				"Author:\t\t%.30s\n"
-				"Album:\t\t%.30s\n"
-				"Year:\t\t%.4s\n"
-				"Comment:\t%.30s\n"
-				"Genre:\t\t%s\n",
-				argv[optind], title, author,
-				album, year, comment,
-				*genre < GENRES_LENGTH ? genres[*genre] : "");
+	const char magic[4] = "\x1cTAG";
+	FILE *file;
+	if(myt || mya || myA || myy || myc || myg)
+		file = fopen(argv[optind], "r+");
+	else
+		file = fopen(argv[optind], "r");
+	if(!file) {
+		perror("open");
+		return 1;
+	}
+	fseek(file, -TAG_LENGTH, SEEK_END);
+	if(fread(&tag, 1, TAG_LENGTH, file) != TAG_LENGTH) {
+		perror("read");
+		exit(1);
+	}
+	if(strncmp(tag.magic, magic, 4)) {
+		fseek(file, 0, SEEK_END);
+		strncpy(tag.magic, magic, 4);
+		bzero(&tag.title, TAG_LENGTH - 4);
+		tag.genre = 0xc;
+	} else
+		fseek(file, -TAG_LENGTH, SEEK_END);
+	if(myt)
+		strncpy(tag.title, myt, 30);
+	if(mya)
+		strncpy(tag.author, mya, 30);
+	if(myA)
+		strncpy(tag.album, myA, 30);
+	if(myy)
+		strncpy(tag.year, myy, 4);
+	if(myc)
+		strncpy(tag.comment, myc, 30);
+	if(myg)
+		tag.genre = myg;
 
-			if(myt || mya || myA || myy || myc || myg)
-				write(file, &tag, TAG_LENGTH);
-			close(file);
-		} else
-			usage(argv[0]);
+	printf(	"%s tags:\n"
+		"Title:\t\t%.30s\n"
+		"Author:\t\t%.30s\n"
+		"Album:\t\t%.30s\n"
+		"Year:\t\t%.4s\n"
+		"Comment:\t%.30s\n"
+		"Genre:\t\t%s\n",
+		argv[optind], tag.title, tag.author,
+		tag.album, tag.year, tag.comment,
+		tag.genre < GENRES_LENGTH ? genres[tag.genre] : "");
+
+	if(myt || mya || myA || myy || myc || myg)
+		if(fwrite(&tag, 1, TAG_LENGTH, file) != TAG_LENGTH) {
+			perror("write");
+			exit(1);
+		}
+
+	fclose(file);
 	return 0;
 }
