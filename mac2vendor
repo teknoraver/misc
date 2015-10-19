@@ -4,4 +4,4 @@
 
 mac=$(echo "$1" |tr '[a-f]' '[A-F]' |tr -d :- |cut -b1-6)
 
-grep -i "^  $mac" /var/lib/ieee-data/oui.txt |sed 's/.*(.*)\s*//'
+grep "^  $mac" /var/lib/ieee-data/oui.txt |sed 's/.*(.*)\s*//'
