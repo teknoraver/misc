@@ -2,6 +2,6 @@
 
 [ -f /var/lib/ieee-data/oui.txt ] || exec echo 'OUI database not found!'
 
-mac="$(echo "$1" |tr '[a-f]' '[A-F]' |tr -d ':-' |cut -b1-6)"
+mac=$(echo "$1" |tr '[a-f]' '[A-F]' |tr -d :- |cut -b1-6)
 
 grep -i "^  $mac" /var/lib/ieee-data/oui.txt |sed 's/.*(.*)\s*//'
