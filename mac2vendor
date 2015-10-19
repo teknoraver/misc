@@ -1,5 +1,6 @@
 #!/bin/sh
 
+[ -n "$1" ] || exec echo "usage: ${0##*/} <mac address>"
 [ -f /var/lib/ieee-data/oui.txt ] || exec echo 'OUI database not found!'
 
 mac=$(echo "$1" |tr '[a-f]' '[A-F]' |tr -d :- |cut -b1-6)
