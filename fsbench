@@ -1,0 +1,42 @@
+#!/bin/sh
+
+[ -b "$1" ] || exec echo "usage: ${0##*/} <device>"
+
+fs='ext4 btrfs f2fs jfs xfs'
+mnt=/tmp/${0##*/}.$$
+csv=fstest-$(date +%s).csv
+
+which bonnie++ >/dev/null || exec echo 'bonnie++ not found'
+
+>$csv
+for i in $fs; do
+	if ! which mkfs.$i >/dev/null; then
+		echo "mkfs.$i not found"
+		continue
+	fi
+	if ! grep -q $i /proc/filesystems; then
+		modprobe $i >/dev/null
+		if ! grep -q $i /proc/filesystems; then
+			echo "$i not supported"
+			continue
+		fi
+	fi
+	case $i in
+	ext4) opts='-Fq' ;;
+	btrfs) opts='-f' ;;
+	f2fs) opts= ;;
+	jfs) opts='-q' ;;
+	xfs) opts='-fq' ;;
+	esac
+	echo "[$i]: formatting"
+	mkfs.$i $opts $1 >/dev/null
+	mkdir -p $mnt
+	echo "[$i] mounting"
+	mount -t $i $1 $mnt
+	echo "[$i] benchmarking"
+	bonnie++ -qd $mnt -u root -m $i >>$csv
+	echo "[$i] unmounting"
+	umount $mnt
+done
+
+rmdir $mnt
