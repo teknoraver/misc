@@ -1,0 +1,13 @@
+#!/bin/sh
+
+[ $# -ne 3 ] && exec echo "$0 <source> <diff1> <diff2>"
+
+trap "rm -rf diff1-$$ diff2-$$" EXIT
+
+cp -r "$1" diff1-$$
+patch -sp1 -d diff1-$$ <"$2"
+
+cp -r "$1" diff2-$$
+patch -sp1 -d diff2-$$ <"$3"
+
+diff -urN diff1-$$ diff2-$$
