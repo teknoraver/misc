@@ -1,0 +1,14 @@
+#!/bin/sh
+
+for i in youtube-dl normalize-audio lame mplayer; do
+	which $i >/dev/null || exec echo "'$i' missing, exiting"
+done
+
+[ $# -ne 2 ] && exec echo "usage: $0 <video_url> <file.mp3>"
+
+trap 'rm -f /tmp/yt2mp3-*$$*' EXIT
+
+youtube-dl -o /tmp/yt2mp3-$$-v- "$1"
+mplayer -ao pcm:fast:file=/tmp/yt2mp3-$$.wav -benchmark -vo null -vc null /tmp/yt2mp3-$$-v-*
+normalize-audio --peak /tmp/yt2mp3-$$.wav
+lame -h -V6 /tmp/yt2mp3-$$.wav "$2"
