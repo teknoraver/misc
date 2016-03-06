@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ndk=/home/matteo/android-ndk-r10e
+ndk=~/android-sdks/ndk-bundle
 
 case $AGCCARCH in
 arm)	archx=arm-linux-androideabi

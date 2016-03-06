@@ -34,9 +34,10 @@ for i in $fs; do
 	echo "[$i] mounting"
 	mount -t $i $1 $mnt
 	echo "[$i] benchmarking"
-	bonnie++ -qd $mnt -u root -m $i >>$csv
+	bonnie++ -r2000 -qd $mnt -u root -m $i >>$csv
 	echo "[$i] unmounting"
 	umount $mnt
+	sleep 60
 done
 
 rmdir $mnt

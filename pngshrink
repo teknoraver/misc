@@ -6,7 +6,7 @@ for i in optipng pngout; do
 	which $i >/dev/null || exec echo "$i missing!"
 done
 
-optipng -o7 -zm1-9 "$i"
+optipng -o7 -zm1-9 "$@"
 
 for i; do
 	pngout "$i"
