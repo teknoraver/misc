@@ -1,0 +1,10 @@
+#!/bin/sh
+
+out="$1"
+shift
+
+for m; do
+	[ ${#args} -eq 0 ] && args="$args -add $m " || args="$args -cat $m "
+done
+
+exec MP4Box -new -no-sys -no-iod $args $out
