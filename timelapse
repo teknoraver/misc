@@ -1,0 +1,4 @@
+#!/bin/sh
+
+mencoder mf://*.JPG -vf crop=3840:2160:80:420,scale=1920:1080 -of rawvideo -o timelapse.264 -ovc x264 -x264encopts crf=22
+MP4Box -new -no-sys -no-iod -brand mp42 -add timelapse.264 timelapse.mp4
