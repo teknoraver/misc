@@ -18,13 +18,13 @@ void findnull(char *path)
 	char *file;
 	struct stat sb;
 	int zero = 1;
+	int fd;
 
-	int fd = open(path, O_RDONLY);
-	fstat(fd, &sb);
-	if(!sb.st_size) {
-		close(fd);
+	stat(path, &sb);
+	if(!sb.st_size)
 		return;
-	}
+
+	fd = open(path, O_RDONLY);
 
 	file = mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0);
 	for(i = 0; i < sb.st_size; i++)
