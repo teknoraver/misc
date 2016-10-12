@@ -1,8 +1,0 @@
-#!/bin/sh
-
-if ! grep -q dropbox /etc/passwd ; then
-	adduser --system --disabled-login --shell /bin/sh dropbox
-fi
-
-[ -d /opt ] || mkdir /opt
-exec dbupdate
