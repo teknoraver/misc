@@ -5,6 +5,6 @@
 root=/tmp/${0##*/}.$$
 mkdir $root
 sudo mount -r -oloop "$1" $root
-kvm -m 512 -no-reboot -nographic -boot d -cdrom "$1" "$2" -kernel $root/install.*/vmlinuz -initrd $root/install.*/initrd.gz -append console=ttyS0
+kvm -m 512 -no-reboot -nographic -boot d -cdrom "$1" -drive "file=$2,index=0,media=disk,format=raw" -kernel $root/install.*/vmlinuz -initrd $root/install.*/initrd.gz -append console=ttyS0
 sudo umount $root
 rmdir $root
