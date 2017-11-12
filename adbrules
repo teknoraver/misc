@@ -1,3 +1,0 @@
-#!/bin/sh
-
-curl -s http://source.android.com/source/51-android.rules |sed -e 's/MODE="0600"/MODE="0660"/' -e 's/OWNER="<username>"/GROUP="plugdev"/' | sudo tee >/dev/null /etc/udev/rules.d/51-android.rules; sudo udevadm control --reload-rules
