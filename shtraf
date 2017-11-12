@@ -1,6 +1,6 @@
 #!/bin/sh
 
-while true; do
+while : ; do
 	for dev; do
 		eval read rx_$dev </sys/class/net/$dev/statistics/rx_bytes
 		eval read tx_$dev </sys/class/net/$dev/statistics/tx_bytes
