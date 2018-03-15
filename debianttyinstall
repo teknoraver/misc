@@ -2,9 +2,22 @@
 
 [ $# -eq 2 ] || exec echo "Usage: $0 <install.iso> <disk.img>"
 
+for k in qemu kvm qemu-kvm; do
+	which $k 2>/dev/null && kvm=$k && break
+done
+[ -n "$kvm" ] || exec echo "error: KVM not found!"
+
+cores=$(nproc)
+[ $cores -gt 4 ] && cpus="-smp cpus=$((cores / 2))"
+
 root=/tmp/${0##*/}.$$
 mkdir $root
 sudo mount -r -oloop "$1" $root
-kvm -m 512 -no-reboot -nographic -boot d -cdrom "$1" -drive "file=$2,index=0,media=disk,format=raw" -kernel $root/install.*/vmlinuz -initrd $root/install.*/initrd.gz -append console=ttyS0
+$kvm -machine q35,accel=kvm -m 512 -no-reboot -nographic $cpus \
+	-boot d -cdrom "$1" \
+	-drive "file=$2,media=disk,format=raw,if=virtio" \
+	-netdev user,id=hostnet0 \
+	-device virtio-net-pci,netdev=hostnet0 \
+	-kernel $root/install.*/vmlinuz -initrd $root/install.*/initrd.gz -append console=ttyS0
 sudo umount $root
 rmdir $root
