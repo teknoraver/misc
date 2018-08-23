@@ -3,7 +3,7 @@
 [ $# -eq 2 ] || exec echo "Usage: $0 <install.iso> <disk.img>"
 
 for k in qemu kvm qemu-kvm; do
-	which $k 2>/dev/null && kvm=$k && break
+	which $k 2>/dev/null >/dev/null && kvm=$k && break
 done
 [ -n "$kvm" ] || exec echo "error: KVM not found!"
 
