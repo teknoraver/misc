@@ -22,9 +22,9 @@ up_sub() {
 		next=$((sub - 1))
 		while [ $sub -gt 0 ] ; do
 			if [ $next -ne 0 ]; then
-				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$next-$sub.xz"
+				url="$url http://cdn.kernel.org/pub/linux/kernel/v$ver.x/incr/patch-$ver.$patch.$next-$sub.xz"
 			else
-				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+				url="$url http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.$sub.xz"
 			fi
 			sub=$next
 			next=$((next - 1))
@@ -38,12 +38,12 @@ up_sub() {
 
 	# now upgrade to latest rev available
 	sub=1
-	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz; do
+	while wget -q --spider http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.$sub.xz; do
 		sub=$((sub + 1))
 	done
 	sub=$((sub - 1))
 	[ $sub -eq 0 ] && exit
-	url="http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+	url="http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.$sub.xz"
 
 	echo "Upgrading to version: $ver.$patch.$sub"
 
@@ -58,9 +58,9 @@ up_patch(){
 		next=$((sub - 1))
 		while [ $sub -gt 0 ] ; do
 			if [ $next -ne 0 ]; then
-				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/incr/patch-$ver.$patch.$next-$sub.xz"
+				url="$url http://cdn.kernel.org/pub/linux/kernel/v$ver.x/incr/patch-$ver.$patch.$next-$sub.xz"
 			else
-				url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.$sub.xz"
+				url="$url http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.$sub.xz"
 			fi
 			sub=$next
 			next=$((next - 1))
@@ -75,8 +75,8 @@ up_patch(){
 	# find the latest rev
 	url=
 	patch=$((patch + 1))
-	while wget -q --spider http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.xz; do
-		url="$url http://www.kernel.org/pub/linux/kernel/v$ver.0/patch-$ver.$patch.xz"
+	while wget -q --spider http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.xz; do
+		url="$url http://cdn.kernel.org/pub/linux/kernel/v$ver.x/patch-$ver.$patch.xz"
 		patch=$((patch + 1))
 	done
 	patch=$((patch - 1))
