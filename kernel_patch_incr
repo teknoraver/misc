@@ -1,19 +1,19 @@
 #!/bin/sh
-# (C) Copyright Matteo Croce <matteo@openwrt.org> 2012
-#       Released under GPL v2.
+# Copyright (C) 2012-2018 Matteo Croce <mcroce@redhat.com>
+#       Released under GPL v3.
 #
 # Usage: kernel_patch_incr [patch|sub]
 #
+
+[ -f Makefile ] || exec echo 'Invalid source tree'
 
 ver=$(awk '/^VERSION/{print$3}' Makefile)
 patch=$(awk '/^PATCHLEVEL/{print$3}' Makefile)
 sub=$(awk '/^SUBLEVEL/{print$3}' Makefile)
 
-[ -f Makefile -a -n "$ver" -a -n "$patch" -a -n "$sub" ] || exec echo 'Invalid source tree'
+[ -n "$ver" ] && [ -n "$patch" ] && [ -n "$sub" ] || exec echo 'Invalid source tree' 2>&1
 
 echo "Current kernel: $ver.$patch.$sub"
-
-[ -d .pc ] && quilt pop -a
 
 dl() {
 	if curl -V >/dev/null 2>/dev/null; then
@@ -43,6 +43,7 @@ up_sub() {
 
 		echo "Downgrading to version: $ver.$patch.$sub"
 
+		# convert the patch output in a status line
 		dl $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
 		echo
 	fi
@@ -112,8 +113,6 @@ sub)
 
 *)
 	echo "usage: $0 [patch|sub]"
+	echo "	patch will upgrade to latest kernel version"
+	echo "	sub will upgrade only to latest subversion of current version"
 esac
-
-[ -d .pc ] && while quilt push; do
-	quilt refresh
-done
