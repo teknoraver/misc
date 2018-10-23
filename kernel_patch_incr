@@ -15,6 +15,17 @@ echo "Current kernel: $ver.$patch.$sub"
 
 [ -d .pc ] && quilt pop -a
 
+dl() {
+	if curl -V >/dev/null 2>/dev/null; then
+		curl -L "$1"
+	elif wget -V >/dev/null 2>/dev/null; then
+		wget -qO- "$1"
+	else
+		echo 'Neither wget or curl were found' >&2
+		return 1
+	fi
+}
+
 up_sub() {
 	# if the patchlevel isn't 0 downgrade to X.Y.0
 	if [ $sub -gt 0 ]; then
@@ -32,7 +43,7 @@ up_sub() {
 
 		echo "Downgrading to version: $ver.$patch.$sub"
 
-		wget -qO- $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		dl $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
 		echo
 	fi
 
@@ -47,7 +58,7 @@ up_sub() {
 
 	echo "Upgrading to version: $ver.$patch.$sub"
 
-	wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+	dl $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
 	echo
 }
 
@@ -68,7 +79,7 @@ up_patch(){
 
 		echo "Downgrading to version: $ver.$patch.$sub"
 
-		wget -qO- $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		dl $url |xz -d |patch -p1 -R |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
 		echo
 	fi
 
@@ -84,7 +95,7 @@ up_patch(){
 	# upgrade to latest patchlevel if necessary
 	if [ -n "$url" ]; then
 		echo "Upgrading to version: $ver.$patch.$sub"
-		wget -qO- $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
+		dl $url |xz -d |patch -p1 |sed -u 's/$/                                          /' |tr '[\n]' '[\r]'
 		echo
 	fi
 }
