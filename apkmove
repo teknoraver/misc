@@ -1,9 +1,0 @@
-#!/bin/sh
-
-dir=/tmp/asec.$$
-
-adb pull /mnt/asec $dir
-
-find $dir -type f -name '*.apk' -print0 |xargs -0n1 adb install -r
-
-rm -rf $dir
