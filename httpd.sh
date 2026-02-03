@@ -22,30 +22,30 @@ error_page() {
 
 get_mime_type() {
 	case "${1,,}" in
-		*.txt) echo "text/plain" ;;
-		*.html|*.htm) echo "text/html" ;;
-		*.css) echo "text/css" ;;
-		*.js) echo "text/javascript" ;;
-		*.json) echo "application/json" ;;
-		*.xml) echo "application/xml" ;;
-		*.jpg|*.jpeg) echo "image/jpeg" ;;
-		*.png) echo "image/png" ;;
-		*.gif) echo "image/gif" ;;
-		*.svg) echo "image/svg+xml" ;;
-		*.webp) echo "image/webp" ;;
-		*.ico) echo "image/x-icon" ;;
-		*.pdf) echo "application/pdf" ;;
-		*.zip) echo "application/zip" ;;
-		*.tar) echo "application/x-tar" ;;
-		*.gz) echo "application/gzip" ;;
-		*.mp3) echo "audio/mpeg" ;;
-		*.m4a) echo "audio/mp4" ;;
-		*.mp4) echo "video/mp4" ;;
-		*.webm) echo "video/webm" ;;
-		*.avi) echo "video/x-msvideo" ;;
-		*.mov) echo "video/quicktime" ;;
-		*.mkv) echo "video/x-matroska" ;;
-		*) echo "application/octet-stream" ;;
+		*.txt) mime="text/plain" ;;
+		*.html|*.htm) mime="text/html" ;;
+		*.css) mime="text/css" ;;
+		*.js) mime="text/javascript" ;;
+		*.json) mime="application/json" ;;
+		*.xml) mime="application/xml" ;;
+		*.jpg|*.jpeg) mime="image/jpeg" ;;
+		*.png) mime="image/png" ;;
+		*.gif) mime="image/gif" ;;
+		*.svg) mime="image/svg+xml" ;;
+		*.webp) mime="image/webp" ;;
+		*.ico) mime="image/x-icon" ;;
+		*.pdf) mime="application/pdf" ;;
+		*.zip) mime="application/zip" ;;
+		*.tar) mime="application/x-tar" ;;
+		*.gz) mime="application/gzip" ;;
+		*.mp3) mime="audio/mpeg" ;;
+		*.m4a) mime="audio/mp4" ;;
+		*.mp4) mime="video/mp4" ;;
+		*.webm) mime="video/webm" ;;
+		*.avi) mime="video/x-msvideo" ;;
+		*.mov) mime="video/quicktime" ;;
+		*.mkv) mime="video/x-matroska" ;;
+		*) mime="application/octet-stream" ;;
 	esac
 }
 
@@ -79,11 +79,11 @@ elif [ -d ".$file" ]; then
 		<tr><td><a href="../">../</a></td><td>-</td><td>-</td></tr>
 	EOF
 	for i in *; do
-		mtime=$(date -d "@$(stat -c %Y "$i")" '+%Y-%m-%d %T')
+		read mode mtime size < <(stat -c '%f %Y %s' "$i")
+		mtime=$(date -d "@$mtime" '+%Y-%m-%d %T')
 		if [ -d "$i" ]; then
 			printf '<tr><td><a href="%s/">%s/</a></td><td>%s</td><td>-</td></tr>\n' "$i" "$i" "$mtime"
 		else
-			size=$(stat -c %s "$i")
 			printf '<tr><td><a href="%s">%s</a></td><td>%s</td><td>%s bytes</td></tr>\n' "$i" "$i" "$mtime" "$size"
 		fi
 	done
@@ -93,7 +93,7 @@ elif [ -d ".$file" ]; then
 		</html>
 	EOF
 else
-	mime=$(get_mime_type "$file")
+	get_mime_type "$file"
 	printf "$http 200 OK\\r\\n"
 	printf "Content-Type: $mime\\r\\n\\r\\n"
 	exec cat ".$file"
